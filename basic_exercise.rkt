@@ -82,9 +82,9 @@
 (define (count-a-loop lst)
   (let ([count 0])
     (for ([i (in-list lst)])
-           (set! count (+ count (if (eq? 'a i)
-                                      1
-                                      0))))
+      (set! count (+ count (if (eq? 'a i)
+                               1
+                               0))))
     count))
 
 (println "result of count-a-loop")
