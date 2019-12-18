@@ -103,3 +103,41 @@
 (carry 2)
 (carry 2 1)
 (carry 2 2)
+
+;定义一个函数,接受一个列表并返回一个列表,指出相等元素出现的次数,并由最常见至最少见的排序
+;(occurrences '(a b a d a c d c a))
+;((A . 4) (C . 2) (D . 2) (B . 1))
+
+;符号顺序比较
+(symbol<? 'a 'b)
+
+(define (occurrences lst)
+  (sort (my-count (sort lst symbol<?)) (lambda (a b) (> (cdr a) (cdr b)))))
+
+
+(define (my-count lst)
+  "'(a b a d a c d c a) -> ((A . 4) (C . 2) (D . 2) (B . 1))"
+  (if (pair? lst)
+      (my-cnt (car lst) 1 (cdr lst))
+      lst))
+
+(define (my-cnt element n lst)
+  (if (null? lst)
+      (list (cons element n))
+      (let ([next (car lst)])
+        (if (equal? next element)
+            (my-cnt element (+ n 1) (cdr lst))
+            (cons (cons element n) (my-cnt next 1 (cdr lst)))))))
+
+(println "occurrences")
+(occurrences '(a b c a b a d))
+(occurrences '(a b a d a c d c a))
+
+;list 总是 pair 类型，但反过来不是
+(println "difference of list and pair")
+(pair? (cons 'a 'b)) ;#t
+(list? (cons 'a 'b)) ;#f
+(cdr (cons 'a 'b)) ;'b
+(cdr (list 'a 'b)) ;'(b)
+(list? '(a . b)) ;#f
+(cons 'a 'b)
