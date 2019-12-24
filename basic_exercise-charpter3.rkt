@@ -33,7 +33,7 @@
 (eq? (integer->char 256) (integer->char 256)) ;#f
 (eq? (integer->char 955) (integer->char 955)) ;#f
 
-(println "cons list and pair")
+(displayln "cons list and pair")
 (cons? (cons 'a null))
 (pair? (cons 'a null))
 (cons? (cons 'b (cons 'a null)))
@@ -63,7 +63,7 @@
       (list n element)
       element))
 
-(println "游程遍历压缩")
+(displayln "游程遍历压缩")
 (compress '(1 1 1 0 1 0 0 0 0 1))
 (compress '())
 (compress '(1))
@@ -78,7 +78,7 @@
       (make-list (car lst) (car (cdr lst)))
       (list lst)))
 
-(println "游程遍历解压缩")
+(displayln "游程遍历解压缩")
 (uncompress '((3 1) 0 1 (4 0) 1))
 
 ;定义任意数量参数函数
@@ -129,15 +129,101 @@
             (my-cnt element (+ n 1) (cdr lst))
             (cons (cons element n) (my-cnt next 1 (cdr lst)))))))
 
-(println "occurrences")
+(displayln "occurrences")
 (occurrences '(a b c a b a d))
 (occurrences '(a b a d a c d c a))
 
-;list 总是 pair 类型，但反过来不是
-(println "difference of list and pair")
+;list 总是 pair 类型(null 例外)，但反过来不是
+(displayln "difference of list and pair")
 (pair? (cons 'a 'b)) ;#t
 (list? (cons 'a 'b)) ;#f
 (cdr (cons 'a 'b)) ;'b
 (cdr (list 'a 'b)) ;'(b)
 (list? '(a . b)) ;#f
 (cons 'a 'b)
+
+;和 common lisp 的表现不一样
+(member '(a) '((a) (b))) ; not #f
+
+;定义一个函数接受一个列表并返回把每个元素加上自己的位置的列表
+(define (recusion-pos+ lst)
+  (if (null? lst)
+      lst
+      (inner-pos+ 0 lst)))
+
+(define (inner-pos+ n lst)
+  (if (null? lst)
+      lst
+      (cons (+ (car lst) n) (inner-pos+ (+ n 1) (cdr lst)))))
+
+(recusion-pos+ '(7 5 1 4)) ; '(7 6 3 7)
+(recusion-pos+ null)
+
+
+(define (iteration-pos+ lst)
+  (if (null? lst)
+      lst
+      (let ([i 0] [result null])
+        (for ([item (in-list lst)])
+          (begin
+            (set! result (append result (list (+ i item))))
+            (set! i (+ i 1))))
+        result)))
+
+(iteration-pos+ '(7 5 1 4))
+
+;这个函数实现有 bug
+(define (showdots lst)
+  "'(a b c) -> (A . (B . (C . NULL)))"
+  (begin
+    (if (null? lst)
+      (display "NULL")
+      (begin
+        (let ([first (car lst)])
+          (if (list? first)
+            (showdots first)
+            (display (string-append "(" (symbol->string first) " . "))))
+        (showdots (cdr lst))
+        ))
+    (display ")")))
+
+(showdots '(a b c))
+(newline)
+(showdots '(a b c () d))
+(newline)
+
+;关联列表 —— 列表中元素由 pair 组成的列表
+(define trans '((+ . "add") (- . "subtract")))
+trans
+
+(define (our-assoc key alist)
+  "一个受限版本的 assoc"
+  (and (pair? alist)
+       (let ([apair (car alist)])
+         (if (equal? key (car apair))
+             apair
+             (our-assoc key (cdr alist))))))
+
+(our-assoc '+ trans)
+(our-assoc '- trans)
+(our-assoc '* trans)
+
+(pair? null) ;#f
+
+(displayln "abc")
+(display #\c)
+(newline)
+
+(substring "abc" 1)
+
+(define (sublist lst from to)
+  "(sublist '(a b c) 1 2) => '(b)"
+  (define (collect-to n lst)
+    (if (= n 0)
+        null
+        (cons (car lst) (collect-to (sub1 n) (cdr lst)))))
+  (collect-to (- to from) (list-tail lst from)))
+
+(sublist '(a b c) 1 2)
+(sublist '(a b c d e) 1 3)
+(sublist '(a b c) 1 3) ;should raise error
