@@ -227,3 +227,39 @@ trans
 (sublist '(a b c) 1 2)
 (sublist '(a b c d e) 1 3)
 (sublist '(a b c) 1 3) ;should raise error
+
+
+(map (lambda (x)
+       (* x 10))
+     '(1 3 5 6 8))
+
+;最短路径
+;搜索网络中最短路径
+(define (shortest-path start end net)
+  (bfs end (list (list start)) net))
+
+(define (bfs end queue net)
+  (if (null? queue)
+      null
+      (let ([path (car queue)])
+        (let ([node (car path)])
+          (if (equal? node end)
+              (reverse path)
+              (bfs end
+                   (append (cdr queue)
+                           (new-paths path node net))
+                   net))))))
+
+(define (new-paths path node net)
+  (map (lambda (n)
+            (cons n path))
+          (cdr (assoc node net))))
+
+(define min '((a b c) (b c) (c d)))
+(shortest-path 'a 'd min)
+
+(define min2 '((a b c) (b c d e) (c d e) (e d)))
+(shortest-path 'a 'd min2)
+;(shortest-path 'a 'e min2) ;;这个搜寻会出错，为什么？
+
+;写一个程序来找到 3.15 节里表示的网络中,最长有限的路径 (不重复)。网络可能包含循环
