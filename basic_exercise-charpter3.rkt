@@ -83,7 +83,7 @@
 
 ;定义任意数量参数函数
 (define 2sum (lambda lst
-  (* 2 (apply + lst))))
+               (* 2 (apply + lst))))
 
 (2sum 1 2 3 4)
 
@@ -177,14 +177,14 @@
   "'(a b c) -> (A . (B . (C . NULL)))"
   (begin
     (if (null? lst)
-      (display "NULL")
-      (begin
-        (let ([first (car lst)])
-          (if (list? first)
-            (showdots first)
-            (display (string-append "(" (symbol->string first) " . "))))
-        (showdots (cdr lst))
-        ))
+        (display "NULL")
+        (begin
+          (let ([first (car lst)])
+            (if (list? first)
+                (showdots first)
+                (display (string-append "(" (symbol->string first) " . "))))
+          (showdots (cdr lst))
+          ))
     (display ")")))
 
 (showdots '(a b c))
@@ -247,19 +247,24 @@ trans
               (reverse path)
               (bfs end
                    (append (cdr queue)
+                           ;子节点加入队列末尾
                            (new-paths path node net))
                    net))))))
 
 (define (new-paths path node net)
   (map (lambda (n)
-            (cons n path))
-          (cdr (assoc node net))))
+         (cons n path))
+       ;和 ANSI common lisp 的 assoc 不一样的是这里 assoc 如果没有找到值会返回 #f 而不是 '()
+       (let ([apath (assoc node net)])
+         (if apath
+             (cdr apath)
+             '()))))
 
 (define min '((a b c) (b c) (c d)))
 (shortest-path 'a 'd min)
 
 (define min2 '((a b c) (b c d e) (c d e) (e d)))
 (shortest-path 'a 'd min2)
-;(shortest-path 'a 'e min2) ;;这个搜寻会出错，为什么？
+(shortest-path 'a 'e min2)
 
 ;写一个程序来找到 3.15 节里表示的网络中,最长有限的路径 (不重复)。网络可能包含循环
