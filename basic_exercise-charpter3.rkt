@@ -263,8 +263,32 @@ trans
 (define min '((a b c) (b c) (c d)))
 (shortest-path 'a 'd min)
 
-(define min2 '((a b c) (b c d e) (c d e) (e d)))
+(define min2 '((a b c) (b c d e) (c e d) (d e)))
 (shortest-path 'a 'd min2)
 (shortest-path 'a 'e min2)
 
 ;写一个程序来找到 3.15 节里表示的网络中,最长有限的路径 (不重复)。网络可能包含循环
+(define (longest-path start end net)
+  (dfs end (list (list start)) net '()))
+
+(define (dfs end stack net long-path)
+  (if (null? stack)
+      (reverse long-path)
+      (let ([path (car stack)])
+        (let ([node (car path)])
+          (if (and (equal? node end)
+                   (> (length path) (length long-path)))
+              ;收集所有可达路径，并比较长度
+              (dfs end
+                   (append (new-paths path node net)
+                         (cdr stack))
+                   net
+                   path)
+              (dfs end
+                   (append (new-paths path node net)
+                         (cdr stack))
+                   net
+                   long-path))))))
+
+(longest-path 'a 'd min)
+(longest-path 'a 'e min2)
