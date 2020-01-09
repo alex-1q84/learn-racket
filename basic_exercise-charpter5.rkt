@@ -75,18 +75,26 @@ mon
 
 (define (precedes-recuration elt vec)
   (define (prec elt vec pos length result)
-    (if (>= pos length)
-        result
-        (if (equal? (vector-ref vec pos) elt)
-            (prec elt vec (+ pos 1) length (cons (vector-ref vec (- pos 1)) result))
-            (prec elt vec (+ pos 1) length result))))
+    (cond [(>= pos length)
+           result]
+          [(equal? (vector-ref vec pos) elt)
+           (prec elt vec (+ pos 1) length (cons (vector-ref vec (- pos 1)) result))]
+          [else
+           (prec elt vec (+ pos 1) length result)]))
   (prec elt vec 1 (vector-length vec) '()))
 
 (precedes-recuration 'a #(a b a c d a e f r a))
 
 ; 定义一个迭代与递归版本的函数,接受一个对象与列表,并返回一个新的列表,在原本列表的对象之间加上传入的对象
 (define (intersperse obj lst)
-  )
-
+  (let ([result '()])
+    (for ([elt lst] [n (in-naturals)])
+      (if (equal? (length lst) (+ n 1))
+          (set! result (cons elt result))
+          (set! result (cons obj (cons elt result)))))
+    (reverse result)))
 
 (intersperse '- '(a b c d))
+
+#;(define (intersperse-recuration obj lst)
+  )
