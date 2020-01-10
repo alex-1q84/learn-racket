@@ -96,5 +96,12 @@ mon
 
 (intersperse '- '(a b c d))
 
-#;(define (intersperse-recuration obj lst)
-  )
+(define (intersperse-recuration obj lst)
+  (if (null? (cdr lst))
+      lst
+      (cons (car lst)
+            (cons obj
+                  (intersperse-recuration obj (cdr lst))))))
+
+(intersperse-recuration '- '(a b c d))
+
