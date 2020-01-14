@@ -105,3 +105,40 @@ mon
 
 (intersperse-recuration '- '(a b c d))
 
+; 定义一个接受一系列数字的函数,并在若且唯若每一对(pair)数字的差为一时,返回真
+(define (pair-diff-1 num-list)
+  (define (pair-diff a b rest)
+    (and (= 1 (- b a))
+         (not (= 1 (length rest)))
+         (or (and (null? rest)
+                  (= 1 (- b a)))
+             (pair-diff (car rest)
+                        (car (cdr rest))
+                        (cdr (cdr rest))))))
+  (and (not (null? num-list))
+       (pair-diff (car num-list)
+                  (car (cdr num-list))
+                  (cdr (cdr num-list)))))
+
+(pair-diff-1 '(1 2 3 4))
+(pair-diff-1 '(1 2 3 4 5))
+(pair-diff-1 '(1 2 3 5))
+(pair-diff-1 '())
+
+; 定义一个单递归函数,返回两个值,分别是向量的最大与最小值
+(define (max-min vec)
+  (define (max-min-inner vec index the-max the-min)
+    (if (>= index (vector-length vec))
+        (values the-max the-min)
+        (max-min-inner vec
+                       (+ index 1)
+                       (max the-max (vector-ref vec index))
+                       (min the-min (vector-ref vec index)))))
+  (max-min-inner vec
+                 0
+                 (vector-ref vec 0)
+                 (vector-ref vec 0)))
+
+(let-values ([(a b) (max-min #(1 5 3 8 6))])
+  (displayln (format "max: ~a" a))
+  (displayln (format "min: ~a" b)))
