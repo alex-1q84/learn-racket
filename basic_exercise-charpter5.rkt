@@ -142,3 +142,7 @@ mon
 (let-values ([(a b) (max-min #(1 5 3 8 6))])
   (displayln (format "max: ~a" a))
   (displayln (format "min: ~a" b)))
+
+(define-values (*a* *b*) (max-min #(1 5 3 8 6)))
+(displayln (format "max: ~a" *a*))
+(displayln (format "min: ~a" *b*))
