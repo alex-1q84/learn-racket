@@ -13,13 +13,13 @@
 ; racket 版本的共享变量的多个闭包
 (define-values (stamp reset)
   (let ([counter 0])
-  (define (reset)
-    (set! counter 0)
-    counter)
-  (define (stamp)
-    (set! counter (+ counter 1))
-    counter)
-  (values stamp reset)))
+    (define (reset)
+      (set! counter 0)
+      counter)
+    (define (stamp)
+      (set! counter (+ counter 1))
+      counter)
+    (values stamp reset)))
 
 (list (stamp) (stamp) (reset) (stamp))
 
@@ -28,7 +28,7 @@
   (if (null? lst)
       lst
       (let* ([wins (car lst)]
-            [max (fn wins)])
+             [max (fn wins)])
         (for ([obj (cdr lst)])
           (let ([score (fn obj)])
             (when (> score max)
@@ -39,3 +39,47 @@
 (most length '((a b) (a b c) (a)))
 
 ; 修改 most 函数,使其返回 2 个数值,一个列表中最高分的两个元素
+(define (most2 fn lst)
+  (if (null? lst)
+      lst
+      (let* ([champion (car lst)]
+             [second null]
+             [max (fn champion)])
+        (for ([obj (cdr lst)])
+          (let ([score (fn obj)])
+            (when (> score max)
+              (set! second champion)
+              (set! champion obj)
+              (set! max score))))
+        (values champion second))))
+
+(most2 length '((a b) (a b c) (a)))
+
+; 定义一个函数,接受一个参数——一个数字,并返回目前传入参数中最大的那个
+(define-values (max-ever)
+  (let ([the-max null])
+    (define (max-ever arg)
+      (if (null? the-max)
+          (set! the-max arg)
+          (set! the-max (max the-max arg)))
+      the-max)
+    max-ever))
+
+(max-ever 1)
+(max-ever 3)
+(max-ever 2)
+(max-ever 1)
+
+(define max-ever2
+  (let ([the-max null])
+    (define (max-ever2 arg)
+      (if (null? the-max)
+          (set! the-max arg)
+          (set! the-max (max the-max arg)))
+      the-max)
+    max-ever2))
+
+(max-ever2 1)
+(max-ever2 3)
+(max-ever2 2)
+(max-ever2 1)
