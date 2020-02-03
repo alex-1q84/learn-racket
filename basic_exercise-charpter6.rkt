@@ -83,3 +83,19 @@
 (max-ever2 3)
 (max-ever2 2)
 (max-ever2 1)
+
+; 定义一个函数,接受一个参数——一个数字,若传入参数比上个参数大时,返回真。函数第一次调用时应返回 null
+(define big-than-previous-ever
+  (let* ([prev null]
+         [comp null])
+    (define (big-than-previous-ever current)
+      (unless (null? prev)
+        (set! comp (> current prev)))
+      (set! prev current)
+      comp)
+    big-than-previous-ever))
+
+(displayln "big-than-previous-ever")
+(big-than-previous-ever 5)
+(big-than-previous-ever 1)
+(big-than-previous-ever 2)
