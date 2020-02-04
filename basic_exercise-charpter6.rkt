@@ -65,6 +65,7 @@
       the-max)
     max-ever))
 
+(displayln "max-ever")
 (max-ever 1)
 (max-ever 3)
 (max-ever 2)
@@ -79,6 +80,7 @@
       the-max)
     max-ever2))
 
+(displayln "max-ever2")
 (max-ever2 1)
 (max-ever2 3)
 (max-ever2 2)
@@ -99,3 +101,55 @@
 (big-than-previous-ever 5)
 (big-than-previous-ever 1)
 (big-than-previous-ever 2)
+
+; 假设 expensive 是一个接受一个参数的函数,一个介于 0 至 100 的整数(包含 100),返回一个耗时的计算结果。
+; 定义一个函数 frugal 来返回同样的答案,但仅在没见过传入参数时调用 expensive
+(define (expensive num)
+  (displayln (format "calling expensive with ~a" num))
+  num)
+
+(define frugal
+  (let ([cache (make-hash)])
+    (define (inner-expensive num)
+      (let ([result
+             (with-handlers ([exn:fail?
+                              (lambda (exn)
+                                (hash-set! cache num (expensive num)))])
+               (hash-ref cache num))])
+        (if (void? result)
+            (hash-ref cache num)
+            result)))
+    inner-expensive))
+
+(displayln "frugal")
+(frugal 1)
+(frugal 1)
+(frugal 2)
+(frugal 2)
+(frugal 3)
+(frugal 4)
+
+; 这个函数接受一个单参数函数作为参数，并返回一个可缓存的相同功能函数
+(define (cacheable fn)
+  (let ([cache (make-hash)])
+    (define (inner-expensive num)
+      (let ([result
+             (with-handlers ([exn:fail?
+                              (lambda (exn)
+                                (hash-set! cache num (fn num)))])
+               (hash-ref cache num))])
+        (if (void? result)
+            (hash-ref cache num)
+            result)))
+    inner-expensive))
+
+(define frugal2
+  (cacheable expensive))
+
+(displayln "frugal2")
+(frugal2 1)
+(frugal2 1)
+(frugal2 2)
+(frugal2 2)
+(frugal2 3)
+(frugal2 4)
