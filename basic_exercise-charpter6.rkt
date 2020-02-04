@@ -105,7 +105,7 @@
 ; 假设 expensive 是一个接受一个参数的函数,一个介于 0 至 100 的整数(包含 100),返回一个耗时的计算结果。
 ; 定义一个函数 frugal 来返回同样的答案,但仅在没见过传入参数时调用 expensive
 (define (expensive num)
-  (displayln (format "calling expensive with ~a" num))
+  (displayln (format "calling expensive with ~A" num))
   num)
 
 (define frugal
@@ -153,3 +153,6 @@
 (frugal2 2)
 (frugal2 3)
 (frugal2 4)
+
+(displayln "format 的使用")
+(display (format "~A~%" "abc"))
