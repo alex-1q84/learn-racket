@@ -1,4 +1,4 @@
 #lang racket
-abc
+abc % some comment
 efg
-hij
+hij % another comment

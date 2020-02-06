@@ -17,6 +17,21 @@
 ; 假设有某种格式的文件文件,注解是由 % 字符表示。从这个字符开始直到行尾都会被忽略。
 ; 定义一个函数,接受两个文件名称,并拷贝第一个文件的内容去掉注解,写至第二个文件
 (define (copy-data in-file out-file)
-  null)
+  (let* ([in (open-input-file in-file)]
+         [out (open-output-file out-file #:exists 'truncate)])
+    (define (transform-fn str)
+      (string-trim str #px"%.*"))
+    
+    (define (copy-to transform-fn)
+      (let ([line (read-line in)])
+        (unless (eof-object? line)
+          ; write out
+          (displayln (transform-fn line) out)
+          (copy-to transform-fn))))
+    
+    (copy-to transform-fn)
+    (close-input-port in)
+    (close-output-port out)))
 
+(displayln "copy-data")
 (copy-data "test-in.txt" "test-out.txt")
