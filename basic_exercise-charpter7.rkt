@@ -35,3 +35,60 @@
 
 (displayln "copy-data")
 (copy-data "test-in.txt" "test-out.txt")
+
+; 字符串代换
+(struct buf
+  (vec start used new end)
+  #:mutable)
+
+(define (bref-index buf n)
+  (remainder n (length (buf-vec buf))))
+
+(define (bref buf n)
+  (vector-ref (buf-vec buf)
+              (bref-index buf n)))
+
+(define (set!-bref val buf n)
+  (vector-set! (buf-vec buf)
+               (bref-index buf n)
+               val))
+
+(define (new-buf len)
+  (buf (make-vector len) -1 -1 -1 -1))
+
+(define (buf-insert x b)
+  (set-buf-end! b (add1 (buf-end b)))
+  (vector-set! (buf-vec b)
+               (bref-index b (buf-end b))
+               x))
+
+(define (buf-pop b)
+  (set-buf-start! b (add1 (buf-start b)))
+  (set-buf-used! b (buf-start b))
+  (set-buf-new! b (buf-end b))
+  (bref b (buf-start b)))
+
+(define (buf-next b)
+  (when (< (buf-used b) (buf-new b))
+    (set-buf-used! b (add1 (buf-used b)))
+    (bref b (buf-used b))))
+
+(define (buf-reset b)
+  (set-buf-used! b (buf-start b))
+  (set-buf-new! b (buf-end b)))
+
+(define (buf-clear b)
+  (set-buf-start! -1)
+  (set-buf-used! -1)
+  (set-buf-new! -1)
+  (set-buf-end! -1))
+
+(define (buf-flush b str)
+  (define (flush-char start current end)
+    (unless (> current (buf-end b))
+      (print (bref b current) str)
+      (flush-char start (add1 current) end)))
+  (flush-char (add1 (buf-used b))
+              (add1 (buf-used b))
+              (buf-end b)))
+
