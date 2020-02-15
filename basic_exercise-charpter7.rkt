@@ -92,3 +92,22 @@
               (add1 (buf-used b))
               (buf-end b)))
 
+(define (file-subset old new file-in file-out)
+  (call-with-input-file file-in
+    (lambda (in)
+      (call-with-output-file file-out #:exists 'truncate
+        (lambda (out)
+          (stream-subst old new in out))))))
+
+(define (stream-subst old new in out)
+  (let* ([pos 0]
+         [len (string-length old)]
+         [buf (new-buf len)]
+         [from-buf null])
+    (define (loop char)
+      (unless (eof-object? char)
+        (display char)
+        (loop (read-char in))))
+    (loop (read-char in))))
+
+(file-subset "racket" "Racket" "test-in.txt" "test-out.txt")
