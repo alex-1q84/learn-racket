@@ -42,7 +42,7 @@
   #:mutable)
 
 (define (bref-index buf n)
-  (remainder n (length (buf-vec buf))))
+  (remainder n (vector-length (buf-vec buf))))
 
 (define (bref buf n)
   (vector-ref (buf-vec buf)
@@ -69,24 +69,28 @@
   (bref b (buf-start b)))
 
 (define (buf-next b)
-  (when (< (buf-used b) (buf-new b))
-    (set-buf-used! b (add1 (buf-used b)))
-    (bref b (buf-used b))))
+  (if (< (buf-used b) (buf-new b))
+      (begin
+        (set-buf-used! b (add1 (buf-used b)))
+        (bref b (buf-used b)))
+      -1))
 
 (define (buf-reset b)
   (set-buf-used! b (buf-start b))
   (set-buf-new! b (buf-end b)))
 
 (define (buf-clear b)
-  (set-buf-start! -1)
-  (set-buf-used! -1)
-  (set-buf-new! -1)
-  (set-buf-end! -1))
+  (set-buf-start! b -1)
+  (set-buf-used! b -1)
+  (set-buf-new! b -1)
+  (set-buf-end! b -1))
 
 (define (buf-flush b str)
   (define (flush-char start current end)
     (unless (> current (buf-end b))
+      ; 这行调用有错误
       (print (bref b current) str)
+      (displayln "buf-flush")
       (flush-char start (add1 current) end)))
   (flush-char (add1 (buf-used b))
               (add1 (buf-used b))
@@ -99,15 +103,46 @@
         (lambda (out)
           (stream-subst old new in out))))))
 
+; 基本思路——创建与待替换字符串长度相同的缓冲区，每读取一个字符则检查是否和待替换字符串对应位置字符相同，
+; 如是则放入缓冲区，继续读下一个，如果缓冲区已使用长度与待替换字符串长度相同，则说明匹配到待替换字符串，输出新的替换字符串，
+; 如果读取到的字符和待替换字符串对应位置字符不同，则说明此段缓冲区内字符与待替换字符串不同，将缓冲区内字符全部输出，并重置缓冲区
 (define (stream-subst old new in out)
   (let* ([pos 0]
          [len (string-length old)]
          [buf (new-buf len)]
-         [from-buf null])
-    (define (loop char)
-      (unless (eof-object? char)
-        (display char)
+         [from-buf -1])
+    (define (loop character)
+      (unless (eof-object? character)
+        (define from-buf (buf-next buf))
+        (cond [(char=? character (string-ref old pos))
+               (set! pos (add1 pos))
+               (cond [(= pos len)
+                      (display new out)
+                      (set! pos 0)
+                      (buf-clear buf)]
+                     [(> from-buf -1)
+                      (buf-insert character buf)])]
+              [(zero? pos)
+               (display character out)
+               (when (> from-buf -1)
+                 (buf-pop buf)
+                 (buf-reset buf))]
+              [else
+               (unless (< from-buf 0)
+                 (buf-insert character buf))
+               (display (buf-pop buf) out)
+               (buf-reset buf)
+               (set! pos 0)])
         (loop (read-char in))))
-    (loop (read-char in))))
+    (loop (read-char in))
+    (buf-flush buf out)))
 
-(file-subset "racket" "Racket" "test-in.txt" "test-out.txt")
+(file-subset "th" "z" "stream-subst-in.txt" "stream-subst-out.txt")
+
+(call-with-input-file "stream-subst-in.txt"
+  (lambda (in)
+    (displayln (read-string 1024 in))))
+
+(call-with-input-file "stream-subst-out.txt"
+  (lambda (in)
+    (displayln (read-string 1024 in))))
