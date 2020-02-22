@@ -48,15 +48,16 @@
   (vector-ref (buf-vec buf)
               (bref-index buf n)))
 
-(define (set!-bref val buf n)
-  (vector-set! (buf-vec buf)
-               (bref-index buf n)
-               val))
+#;(define (set!-bref val buf n)
+    (vector-set! (buf-vec buf)
+                 (bref-index buf n)
+                 val))
 
 (define (new-buf len)
   (buf (make-vector len) -1 -1 -1 -1))
 
 (define (buf-insert x b)
+  ; increase buf end
   (set-buf-end! b (add1 (buf-end b)))
   (vector-set! (buf-vec b)
                (bref-index b (buf-end b))
@@ -73,7 +74,7 @@
       (begin
         (set-buf-used! b (add1 (buf-used b)))
         (bref b (buf-used b)))
-      -1))
+      null))
 
 (define (buf-reset b)
   (set-buf-used! b (buf-start b))
@@ -104,31 +105,32 @@
           (stream-subst old new in out))))))
 
 ; 基本思路——创建与待替换字符串长度相同的缓冲区，每读取一个字符则检查是否和待替换字符串对应位置字符相同，
-; 如是则放入缓冲区，继续读下一个，如果缓冲区已使用长度与待替换字符串长度相同，则说明匹配到待替换字符串，输出新的替换字符串，
-; 如果读取到的字符和待替换字符串对应位置字符不同，则说明此段缓冲区内字符与待替换字符串不同，将缓冲区内字符全部输出，并重置缓冲区
+; 如是则放入缓冲区，继续读下一个，如果缓冲区已使用长度与待替换字符串长度相同，则说明匹配到待替换字符串，输出新的替换字符串并清空缓冲区，重置缓冲区，
+; 如果读取到的字符和待替换字符串对应位置字符不同，则说明此段缓冲区内字符与待替换字符串不同，弹出缓冲区顶部第一个字符并输出
 (define (stream-subst old new in out)
   (let* ([pos 0]
          [len (string-length old)]
          [buf (new-buf len)]
-         [from-buf -1])
+         [from-buf null])
     (define (loop character)
       (unless (eof-object? character)
         (define from-buf (buf-next buf))
         (cond [(char=? character (string-ref old pos))
                (set! pos (add1 pos))
-               (cond [(= pos len)
-                      (display new out)
-                      (set! pos 0)
-                      (buf-clear buf)]
-                     [(> from-buf -1)
-                      (buf-insert character buf)])]
+               (if (= pos len)
+                   (begin
+                     (display new out)
+                     (set! pos 0)
+                     (buf-clear buf))
+                   (buf-insert character buf))]
               [(zero? pos)
                (display character out)
-               (when (> from-buf -1)
+               (when (not (null? from-buf))
                  (buf-pop buf)
                  (buf-reset buf))]
               [else
-               (unless (< from-buf 0)
+               (when (null? from-buf)
+                 (displayln (format "insert to buf ~A" character))
                  (buf-insert character buf))
                (display (buf-pop buf) out)
                (buf-reset buf)
