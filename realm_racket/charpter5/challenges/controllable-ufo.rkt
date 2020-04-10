@@ -14,12 +14,12 @@
 ; 一个包含状态和方向的结构，这样就可以把每次的位置和方向存下来
 (struct world (state dir))
 (struct posn (x y))
-(struct direction (dir toward))
+(struct direction (toward))
 
-(define DOWN (direction 'V +))
-(define UP (direction 'V -))
-(define RIGHT (direction 'H +))
-(define LEFT (direction 'H -))
+(define DOWN (direction +))
+(define UP (direction -))
+(define RIGHT (direction +))
+(define LEFT (direction -))
 
 (define (add-3-to-state current-state)
   (world (move (world-state current-state)
