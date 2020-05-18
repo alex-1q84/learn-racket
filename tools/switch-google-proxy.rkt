@@ -4,6 +4,7 @@
          racket/list)
 
 (define IS-GOOGLE #f)
+(define GOOGLE-TOG-STATUS #f)
 
 (define (toggle-google-proxy! action-file)
   (define confs (call-with-input-file action-file
@@ -12,7 +13,8 @@
   (call-with-output-file action-file
     #:exists 'replace
     (lambda (out)
-      (write-lines confs out))))
+      (write-lines confs out)))
+  (display-toggle-status GOOGLE-TOG-STATUS "google"))
 
 (define (read-lines in)
   "read all lines from input port"
@@ -40,7 +42,10 @@
 (define (tog conf need-tog)
   (if need-tog
       (if (string-prefix? conf "#")
-          (substring conf 1)
+          (begin
+            (when (not GOOGLE-TOG-STATUS)
+              (set! GOOGLE-TOG-STATUS #t))
+            (substring conf 1))
           (string-append "#" conf))
       conf))
 
@@ -48,5 +53,10 @@
   (unless (empty? lst)
     (displayln (first lst) out)
     (write-lines (rest lst) out)))
+
+(define (display-toggle-status status name)
+  (if status
+      (displayln (format "turn ~A proxy on" name))
+      (displayln (format "turn ~A proxy off" name))))
 
 (toggle-google-proxy! "/usr/local/etc/privoxy/wall.action")
