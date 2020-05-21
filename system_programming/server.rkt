@@ -10,7 +10,11 @@
     (accept-and-handle listener)
     (loop))
   ; start the loop method in a new thread
-  (loop))
+  (define t (thread loop))
+  ; return a method that can stop this server
+  (lambda ()
+    (kill-thread t)
+    (tcp-close listener)))
 
 (define (accept-and-handle listener)
   (define-values (in out) (tcp-accept listener))
