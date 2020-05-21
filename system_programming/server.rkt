@@ -18,11 +18,14 @@
 
 (define (accept-and-handle listener)
   (define-values (in out) (tcp-accept listener))
-  (thread
-   (lambda ()
-     (handle in out)
-     (close-input-port in)
-     (close-output-port out))))
+  (define t (thread
+             (lambda ()
+               (handle in out)
+               (close-input-port in)
+               (close-output-port out))))
+  (thread (lambda ()
+            (sleep 10)
+            (kill-thread t))))
 
 (define (handle in out)
   ;Discard the request header (up to blank line):
