@@ -5,16 +5,18 @@
 ;(enter! "lab/racket/system_programming/server.rkt")
 
 (define (server port-no)
-  (define listener (tcp-listen port-no 5 #t))
-  (define (loop)
-    (accept-and-handle listener)
-    (loop))
-  ; start the loop method in a new thread
-  (define t (thread loop))
+  (define main-cust (make-custodian))
+  
+  (parameterize ([current-custodian main-cust])
+    (define listener (tcp-listen port-no 5 #t))
+    (define (loop)
+      (accept-and-handle listener)
+      (loop))
+    ; start the loop method in a new thread
+    (thread loop))
   ; return a method that can stop this server
   (lambda ()
-    (kill-thread t)
-    (tcp-close listener)))
+    (custodian-shutdown-all main-cust)))
 
 (define (accept-and-handle listener)
   (define cust (make-custodian))
