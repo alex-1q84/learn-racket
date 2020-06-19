@@ -21,4 +21,14 @@
  (string->xexpr "<?xml version=\"1.0\" encoding=\"UTF-8\"?><books><book><author>nile</author></book></books>"))
 
 ; not work in DrRacket
-(eval `(hello "world") n)
+#;(eval `(hello "world") n)
+
+
+; base64 demo
+(require net/base64)
+
+(bytes->string/locale (base64-encode (string->bytes/locale "abc")))
+
+(base64-decode (string->bytes/locale "YWJj"))
+
+(bytes->string/locale (base64-decode (base64-encode (string->bytes/locale "abc"))))
