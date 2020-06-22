@@ -53,3 +53,12 @@ this is an ordered item list
    }| 渲染后结果
 
 1 plus 1 is @(number->string (+ 1 1))
+
+图片，任何能够转换成图片的变量都可以直接在 scribble 文档里使用，例如使用库 pict 和 2htdp/image 内的系列图片函数
+
+自由地引用 racket 包
+@(require pict)
+
+This cookie has lost its chocolate chips:
+@(colorize (filled-ellipse 40 40) "beige").
+
