@@ -143,11 +143,11 @@
     (img-list+scene (snake-body sn) SEG-IMG scene))
   (define dir (snake-dir sn))
   (img+scene (snake-head sn)
-               (cond [(string=? "up" dir) HEAD-UP-IMG]
-                     [(string=? "down" dir) HEAD-DOWN-IMG]
-                     [(string=? "left" dir) HEAD-LEFT-IMG]
-                     [(string=? "right" dir) HEAD-RIGHT-IMG])
-               snake-body-scene))
+             (cond [(string=? "up" dir) HEAD-UP-IMG]
+                   [(string=? "down" dir) HEAD-DOWN-IMG]
+                   [(string=? "left" dir) HEAD-LEFT-IMG]
+                   [(string=? "right" dir) HEAD-RIGHT-IMG])
+             snake-body-scene))
 
 (define (img-list+scene posns img scene)
   (cond [(empty? posns) scene]
@@ -175,7 +175,10 @@
       (wall-colliding? snake)))
 
 (define (render-end w)
-  (overlay (text "Game Over" ENDGAME-TEXT-SIZE "black")
+  (overlay (text
+            (format "Game Over\nEaten ~A goos"
+                    (length (snake-body (pit-snake w))))
+            ENDGAME-TEXT-SIZE "black")
            (render-snake-world w)))
 
 (define (self-colliding? snake)
