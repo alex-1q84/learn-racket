@@ -2,8 +2,8 @@
 
 (require 2htdp/universe 2htdp/image)
 
-(define TICK-RATE 1)
-(define SIZE 50)
+(define TICK-RATE 1/3)
+(define SIZE 30)
 (define EXPIRATION-TIME 100)
 (define ENDGAME-TEXT-SIZE 80)
 
@@ -188,7 +188,7 @@
       (= 0 y) (= y SIZE)))
 
 (define (render-snake-world w)
-  w)
+  (render-pit w))
 
 (define (opposite-dir? d1 d2)
   (cond [(string=? d1 "up") (string=? d2 "down")]
