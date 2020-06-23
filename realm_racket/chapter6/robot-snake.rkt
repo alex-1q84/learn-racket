@@ -33,16 +33,18 @@
 
 (define (start-game)
   (big-bang (pit (snake "right" (list (posn 1 1)))
-                 (list (fresh-goo)
-                       (fresh-goo)
-                       (fresh-goo)
-                       (fresh-goo)
-                       (fresh-goo)
-                       (fresh-goo)))
+                 (random-list 3 8 fresh-goo))
     (on-tick next-pit TICK-RATE)
     (on-key direct-snake)
     (to-draw render-pit)
     (stop-when dead? render-end)))
+
+(define (random-list min max generater)
+  (define amount (random min (add1 max)))
+  (let fill-list ([n amount])
+    (if (zero? n)
+        empty
+        (cons (generater) (fill-list (sub1 n))))))
 
 (define (next-pit w)
   (define snake (pit-snake w))
