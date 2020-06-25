@@ -1,6 +1,6 @@
 #lang racket
 
-(require 2htdp/universe 2htdp/image)
+(require 2htdp/universe 2htdp/image racket/random)
 
 (define TICK-RATE 1/3)
 (define SIZE 30)
@@ -19,6 +19,7 @@
 
 ; goo
 (define GOO-IMG (bitmap "graphics/goo.gif"))
+(define RED-GOO-IMG (bitmap "graphics/red-goo.gif"))
 
 (define MT-SCENE (empty-scene (* SEG-SIZE SIZE) (* SEG-SIZE SIZE)))
 
@@ -29,7 +30,7 @@
 
 (struct posn (x y))
 
-(struct goo (loc expire))
+(struct goo (loc expire type))
 
 (define (start-game)
   (big-bang (pit (snake "right" (list (posn 1 1)))
@@ -115,7 +116,8 @@
 (define (fresh-goo)
   (goo (posn (add1 (random (sub1 SIZE)))
              (add1 (random (sub1 SIZE))))
-       EXPIRATION-TIME))
+       EXPIRATION-TIME
+       (random-ref '(green red))))
 
 (define (direct-snake w ke)
   (cond [(dir? ke) (world-change-dir w ke)]
@@ -169,7 +171,25 @@
     (cond [(empty? goos) empty]
           [else (cons (goo-loc (first goos))
                       (get-posns-from-goo (rest goos)))]))
-  (img-list+scene (get-posns-from-goo goos) GOO-IMG scene))
+
+  (define (goos+scene goo-list scene)
+    (if (empty? goo-list)
+        scene
+        (img-list+scene
+         (get-posns-from-goo goo-list)
+         (goo-img (first goo-list))
+         scene)))
+  (define-values (a b) (group-goos goos))
+  (goos+scene b (goos+scene a scene)))
+
+(define (goo-img g)
+  (cond [(eq? (goo-type g) 'green) GOO-IMG]
+        [(eq? (goo-type g) 'red) RED-GOO-IMG]))
+
+(define (group-goos goos)
+  (values
+   (filter (lambda (g) (eq? (goo-type g) 'green)) goos)
+   (filter (lambda (g) (eq? (goo-type g) 'red)) goos)))
 
 (define (dead? w)
   (define snake (pit-snake w))
