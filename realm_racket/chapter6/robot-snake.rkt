@@ -51,9 +51,13 @@
   (define snake (pit-snake w))
   (define goos (pit-goos w))
   (define goo-to-eat (can-eat snake goos))
-  (if goo-to-eat
-      (pit (grow snake) (age-goo (eat goos goo-to-eat)))
-      (pit (slither snake) (age-goo goos))))
+  (match goo-to-eat
+    [(goo _ _ 'green)
+     (pit (grow snake) (age-goo (eat goos goo-to-eat)))]
+    [(goo _ _ 'red)
+     (pit (grow (grow snake)) (age-goo (eat goos goo-to-eat)))]
+    [#f
+     (pit (slither snake) (age-goo goos))]))
 
 (define (can-eat snake goos)
   (cond [(empty? goos) #f]
