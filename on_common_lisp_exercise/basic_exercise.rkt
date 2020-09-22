@@ -39,21 +39,19 @@
 ;接受一个正整数,并打印出数字数量的点
 (define (print-dots count)
   "递归版"
-  (if (> count 0)
-      (begin
-        (print ".")
-        (print-dots (- count 1)))
-      'done)
-  )
+  (cond [(> count 0)
+         (display ".")
+         (print-dots (- count 1))]))
 
 (print-dots 5) ;.....
 (newline)
 (print-dots 1) ;.
+(newline)
 
 (define (print-dots-loop count)
   "迭代版"
   (for ([i count])
-    (print ".")))
+    (display ".")))
 
 (print-dots-loop 5)
 (newline)

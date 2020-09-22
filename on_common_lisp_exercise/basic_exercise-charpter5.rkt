@@ -71,6 +71,7 @@ mon
         (set! lst (cons (vector-ref vec (- i 1)) lst))))
     lst))
 
+(displayln "function precedes-iter demos")
 (precedes-iter 'a #(a b a c d a e f r a))
 
 (define (precedes-recuration elt vec)
@@ -120,9 +121,11 @@ mon
                   (car (cdr num-list))
                   (cdr (cdr num-list)))))
 
+(displayln "function pair-diff-1 demos")
 (pair-diff-1 '(1 2 3 4))
 (pair-diff-1 '(1 2 3 4 5))
 (pair-diff-1 '(1 2 3 5))
+;; (pair-diff-1 '(1)) ; 当前实现不能处理长度 1 的列表
 (pair-diff-1 '())
 
 ; 定义一个单递归函数,返回两个值,分别是向量的最大与最小值

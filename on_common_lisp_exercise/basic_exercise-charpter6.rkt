@@ -10,7 +10,7 @@
     counter)
   (list (stamp) (stamp) (reset) (stamp)))
 
-; racket 版本的共享变量的多个闭包
+(displayln "racket 版本的共享变量的多个闭包")
 (define-values (stamp reset)
   (let ([counter 0])
     (define (reset)

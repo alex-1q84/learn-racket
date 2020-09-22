@@ -224,10 +224,21 @@ trans
         (cons (car lst) (collect-to (sub1 n) (cdr lst)))))
   (collect-to (- to from) (list-tail lst from)))
 
+(displayln "function sublist demos")
 (sublist '(a b c) 1 2)
 (sublist '(a b c d e) 1 3)
-(sublist '(a b c) 1 3) ;should raise error
+(sublist '(a b c) 1 3)
+;; (sublist '(a b c) 1 4) ;will raise error
 
+(define (sublist2 lst from to)
+  "(sublist '(a b c) 1 2) => '(b)"
+  (take (list-tail lst from) (- to from)))
+
+(displayln "function sublist2 demos")
+(sublist2 '(a b c) 1 2)
+(sublist2 '(a b c d e) 1 3)
+(sublist2 '(a b c) 1 3)
+;; (sublist2 '(a b c) 1 4) ;should raise error
 
 (map (lambda (x)
        (* x 10))
