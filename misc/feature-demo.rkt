@@ -32,3 +32,19 @@
 (base64-decode (string->bytes/locale "YWJj"))
 
 (bytes->string/locale (base64-decode (base64-encode (string->bytes/locale "abc"))))
+
+
+(display "for usage demos")
+; 注意 #:unless 和 #:when 属于条件语句，当只会让 for 在符合所指定条件时执行 body 子句，并不会让 for 终止
+(for ([n (in-naturals)] #:unless (> n 100))
+  (displayln n))
+
+(for ([n (in-naturals)] #:when (< n 100))
+  (displayln n))
+
+; #:break 和 #:final 是 for 的终止条件，两者区别看运行示例即可明了
+(for ([n (in-naturals)] #:break (= n 100))
+  (displayln n))
+
+(for ([n (in-naturals)] #:final (= n 100))
+  (displayln n))
