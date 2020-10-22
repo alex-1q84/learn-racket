@@ -15,8 +15,16 @@
 (define CLUB-STRENGTH 10)
 
 (define DAMAGE 2)
+(define HEALING 2)
+(define STAB-DAMAGE 2)
 
+(define FLAIL-DAMAGE 4)
 (define ATTACK# 4)
+
+;; brigand damages
+(define HEALTH-DAMAGE 2)
+(define AGILITY-DAMAGE 2)
+(define STRENGTH-DAMAGE 2)
 
 (define INSTRUCTION-TEXT-SIZE 16)
 (define INSTRUCTION-COLOR "black")
@@ -113,12 +121,25 @@
 
 
 (define (lose? w)
-  (<= (player-health (orc-world-player w))
-      0))
+  (player-dead? (orc-world-player w)))
 
 
 (define (win? w)
-  (empty? (orc-world-lom w)))
+  (all-dead? (orc-world-lom w)))
+
+
+(define (player-dead? p)
+  (or (= (player-health p) 0)
+      (= (player-strength p) 0)
+      (= (player-agility p) 0)))
+
+
+(define (all-dead? lom)
+  (not (ormap monster-alive? lom)))
+
+
+(define (monster-alive? m)
+  (> (monster-health m) 0))
 
 
 (define (render-orc-battle w)
@@ -131,8 +152,8 @@
 
 (define (render-orc-world world target msg)
   (displayln world)
-  (displayln target)
-  (displayln msg)
+  (displayln (format "target to ~A" target))
+  (displayln (format "msg ~A" msg))
   (define i-player (render-player (orc-world-player world)))
   (define i-monster (render-monsters (orc-world-lom world) target))
   (above V-SPACER
@@ -222,27 +243,94 @@
 
 (define (stab world)
   (displayln "stab")
-  world)
+  (decrease-attack# world)
+  (define target
+    (list-ref (orc-world-lom world) (orc-world-target world)))
+  (define damage
+    (random-quotient (player-strength (orc-world-player world))
+                     STAB-DAMAGE))
+  (damage-monster target damage))
+
 
 (define (heal world)
   (displayln "heal")
-  world)
+  (decrease-attack# world)
+  (player-health+ (orc-world-player world) HEALING))
 
 (define (flail world)
   (displayln "flail")
-  world)
+  (decrease-attack# world)
+  (define target (current-target world))
+  (define alive (filter monster-alive? (orc-world-lom world)))
+  (define pick#
+    (min
+     (random-quotient (player-strength (orc-world-player world))
+                      FLAIL-DAMAGE)
+     (length alive)))
+  (define getem (cons target (take alive pick#)))
+  (for-each (lambda (m) (damage-monster m 1)) getem))
+
+
+(define (current-target world)
+  (list-ref (orc-world-lom world) (orc-world-target world)))
+
+
+(define (decrease-attack# world)
+  (set-orc-world-attack#! world (sub1 (orc-world-attack# world))))
+
+
+(define (damage-monster m delta)
+  (set-monster-health! m (interval- (monster-health m) delta)))
+
+
+(define (interval- base delta)
+  (if (< base delta)
+      0
+      (- base delta)))
+
 
 (define (end-turn world)
   (displayln "end-turn")
-  world)
+  (set-orc-world-attack#! world 0))
+
 
 (define (move-target world steps)
   (displayln (format "move-target ~A" steps))
-  world)
+  (define new (+ (orc-world-target world) steps))
+  (set-orc-world-target! world (modulo new MONSTER#)))
+
 
 (define (give-monster-turn-if-attack#=0 world)
   (displayln "give-monster-turn-if-attack#=0")
-  world)
+  (when (zero? (orc-world-attack# world))
+    (define player (orc-world-player world))
+    (all-monsters-attack-player player (orc-world-lom world))
+    (set-orc-world-attack#! world (random-number-of-attacks player))))
+
+
+(define (all-monsters-attack-player player lom)
+  (define (one-monster-attacks-player m)
+    (cond
+      [(orc? m)
+       (player-health+ player (random- (orc-club m)))]
+      [(hydra? m)
+       (player-health+ player (random- (monster-health m)))]
+      [(slime? m)
+       (player-health+ player -1)
+       (player-agility+ player (random- (slime-sliminess m)))]
+      [(brigand? m)
+       (case (random 3)
+         [(0) (player-health+ player HEALTH-DAMAGE)]
+         [(1) (player-agility+ player AGILITY-DAMAGE)]
+         [(2) (player-strength+ player STRENGTH-DAMAGE)])]))
+
+  (define live-monsters (filter monster-alive? lom))
+  (for-each one-monster-attacks-player live-monsters))
+
+
+(define (random- num)
+  (- (random num)))
+
 
 (define (initialize-player)
   (player MAX-HEALTH MAX-AGILITY MAX-STRENGTH))
