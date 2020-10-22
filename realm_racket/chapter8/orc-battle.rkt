@@ -44,14 +44,17 @@
 (define HEALTH-BAR-HEIGH 10)
 (define HEALTH-SIZE 14)
 
-;(define)
+; (define TARGET (rectangle 40 2 'solid "yellow"))
+(define DEAD-TEXT (text "Dead" HEALTH-SIZE "red"))
+(define MONSTER-COLOR "light blue")
+
 ;; game end message
 (define LOSE "YOU LOSE")
 (define WIN "YOU WIN")
 
 ;; monster per row
 (define PER-ROW 4)
-(define MONSTER# 6)
+(define MONSTER# (* PER-ROW 4))
 (define SLIMINESS 5)
 
 ;; charactor images
@@ -67,7 +70,7 @@
 (struct orc monster (club) #:transparent)
 (struct hydra monster () #:transparent)
 (struct slime monster (sliminess) #:transparent)
-(struct brigand imageable (health) #:transparent)
+(struct brigand monster () #:transparent)
 
 ;; (list (orc MONSTER-HEALTH0 (add1 (random CLUB-STRENGTH))))
 
@@ -159,11 +162,41 @@
 
 
 (define (render-monsters lom with-target)
-  (rectangle 10 10 'solid "white"))
+  ;; the currently targeted monster (if needed)
+  (define target
+    (if (number? with-target)
+        (list-ref lom with-target)
+        'a-silly-symbol-that-cannot-be-eq-to-an-orc))
+  
+  (define (render-one-monster m)
+    (define monster-image (imageable-image m))
+    (define image
+      (if (eq? m target)
+          (underlay (rectangle (+ 2 (image-width monster-image))
+                               (+ 2 (image-height monster-image))
+                               'solid
+                               "orange")
+                    monster-image)
+          (imageable-image m)))
+    (define health (monster-health m))
+    (define health-bar
+      (if (= health 0)
+          (overlay DEAD-TEXT (status-bar 0 1 'white ""))
+          (status-bar health MONSTER-HEALTH0 MONSTER-COLOR "")))
+    (above health-bar image))
+
+  (arrange (map render-one-monster lom)))
+
+
+(define (arrange lom)
+  (cond
+    [(empty? lom) empty-image]
+    [else (define r (apply beside (take lom PER-ROW)))
+          (above r (arrange (drop lom PER-ROW)))]))
 
 
 (define (status-bar v-current-point v-max-point color label)
-  (displayln (format "~A ~A" label status-bar))
+  (displayln (format "~A ~A" label v-current-point))
   (define w (* (/ v-current-point v-max-point) HEALTH-BAR-WIDTH))
   (define f (rectangle w HEALTH-BAR-HEIGH 'solid color))
   (define b (rectangle HEALTH-BAR-WIDTH HEALTH-BAR-HEIGH 'solid "white"))
@@ -174,16 +207,16 @@
 (define (player-act-on-monsters world key)
   (displayln (format "key: ~A" key))
   (cond
-     [(zero? (orc-world-attack# world)) (void)]
-     [(key=? "s" key) (stab world)]
-     [(key=? "h" key) (heal world)]
-     [(key=? "f" key) (flail world)]
-     [(key=? "e" key) (end-turn world)]
-     [(key=? "n" key) (initialize-orc-world)]
-     [(key=? "right" key) (move-target world +1)]
-     [(key=? "left" key)  (move-target world -1)]
-     [(key=? "down" key)  (move-target world (+ PER-ROW))]
-     [(key=? "up" key)    (move-target world (- PER-ROW))])
+    [(zero? (orc-world-attack# world)) (void)]
+    [(key=? "s" key) (stab world)]
+    [(key=? "h" key) (heal world)]
+    [(key=? "f" key) (flail world)]
+    [(key=? "e" key) (end-turn world)]
+    [(key=? "n" key) (initialize-orc-world)]
+    [(key=? "right" key) (move-target world +1)]
+    [(key=? "left" key)  (move-target world -1)]
+    [(key=? "down" key)  (move-target world (+ PER-ROW))]
+    [(key=? "up" key)    (move-target world (- PER-ROW))])
   (give-monster-turn-if-attack#=0 world)
   world)
 
