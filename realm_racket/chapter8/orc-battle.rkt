@@ -18,6 +18,33 @@
 
 (define ATTACK# 4)
 
+(define INSTRUCTION-TEXT-SIZE 16)
+(define INSTRUCTION-COLOR "black")
+(define ATTACK-COLOR 'red)
+(define REMAINING "It been attacked, remain health point ")
+(define INSTRACTION-TEXT (text "Ah! ah! ah! You are stuck in this Orc Battle World"
+                               INSTRUCTION-TEXT-SIZE
+                               INSTRUCTION-COLOR))
+
+(define MESSAGES-SIZE 24)
+(define MESSAGE-COLOR 'black)
+
+(define V-SPACER (rectangle 0 10 "solid" "white"))
+(define H-SPACER (rectangle 10 0 "solid" "white"))
+
+;; status bar
+(define STRENGTH-COLOR "orange")
+(define STRENGTH "Strength")
+(define AGILITY-COLOR "green")
+(define AGILITY "Agility")
+(define HEALTH-COLOR "RED")
+(define HEALTH "Health")
+
+(define HEALTH-BAR-WIDTH 60)
+(define HEALTH-BAR-HEIGH 10)
+(define HEALTH-SIZE 14)
+
+;(define)
 ;; game end message
 (define LOSE "YOU LOSE")
 (define WIN "YOU WIN")
@@ -26,17 +53,21 @@
 (define PER-ROW 4)
 (define MONSTER# 6)
 (define SLIMINESS 5)
+
+;; charactor images
 (define ORC-IMAGE (bitmap "graphics/orc.png"))
 (define HYDRA-IMAGE (bitmap "graphics/hydra.png"))
 (define SLIME-IMAGE (bitmap "graphics/slime.bmp"))
 (define BRIGAND-IMAGE (bitmap "graphics/brigand.bmp"))
+(define PLAYER-IMAGE (bitmap "graphics/player.bmp"))
 
-(struct monster ([health #:mutable]) #:transparent)
-(struct imageable (image))
+(struct imageable (image) #:transparent)
+
+(struct monster imageable ([health #:mutable]) #:transparent)
 (struct orc monster (club) #:transparent)
 (struct hydra monster () #:transparent)
 (struct slime monster (sliminess) #:transparent)
-(struct brigand imageable () #:transparent)
+(struct brigand imageable (health) #:transparent)
 
 ;; (list (orc MONSTER-HEALTH0 (add1 (random CLUB-STRENGTH))))
 
@@ -96,11 +127,48 @@
 
 
 (define (render-orc-world world target msg)
-  ;; FIXME
   (displayln world)
   (displayln target)
   (displayln msg)
-  (rectangle 100 100 'solid 'white))
+  (define i-player (render-player (orc-world-player world)))
+  (define i-monster (render-monsters (orc-world-lom world) target))
+  (above V-SPACER
+         (beside H-SPACER
+                 i-player
+                 H-SPACER H-SPACER H-SPACER
+                 (above i-monster
+                        V-SPACER V-SPACER V-SPACER
+                        msg)
+                 H-SPACER)
+         V-SPACER))
+
+
+(define (render-player p)
+  (define s (player-strength p))
+  (define a (player-agility p))
+  (define h (player-health p))
+  (above/align
+   "left"
+   (status-bar s MAX-STRENGTH STRENGTH-COLOR STRENGTH)
+   V-SPACER
+   (status-bar a MAX-AGILITY AGILITY-COLOR AGILITY)
+   V-SPACER
+   (status-bar h MAX-HEALTH HEALTH-COLOR HEALTH)
+   V-SPACER V-SPACER V-SPACER
+   PLAYER-IMAGE))
+
+
+(define (render-monsters lom with-target)
+  (rectangle 10 10 'solid "white"))
+
+
+(define (status-bar v-current-point v-max-point color label)
+  (displayln (format "~A ~A" label status-bar))
+  (define w (* (/ v-current-point v-max-point) HEALTH-BAR-WIDTH))
+  (define f (rectangle w HEALTH-BAR-HEIGH 'solid color))
+  (define b (rectangle HEALTH-BAR-WIDTH HEALTH-BAR-HEIGH 'solid "white"))
+  (define bar (overlay/align "left" "top" f b))
+  (beside bar H-SPACER (text label HEALTH-SIZE color)))
 
 
 (define (player-act-on-monsters world key)
@@ -173,11 +241,15 @@
 
 
 (define (instructions world)
-  "Welcome to Ocr Battle World")
+  (define na (number->string (orc-world-attack# world)))
+  (define ra (string-append REMAINING na))
+  (define txt (text ra INSTRUCTION-TEXT-SIZE ATTACK-COLOR))
+  (above txt INSTRACTION-TEXT))
 
 
 (define (message status)
-  (format "game ended with ~A" status))
+  (format "game ended with ~A" status)
+  (text status MESSAGES-SIZE MESSAGE-COLOR))
 
 
 (module+ test
