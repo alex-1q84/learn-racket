@@ -16,6 +16,8 @@
 
 (define DAMAGE 2)
 (define HEALING 2)
+(define AGILITY-GAIN 2)
+(define STRENGTH-GAIN 2)
 (define STAB-DAMAGE 2)
 
 (define FLAIL-DAMAGE 4)
@@ -29,7 +31,7 @@
 (define INSTRUCTION-TEXT-SIZE 16)
 (define INSTRUCTION-COLOR "black")
 (define ATTACK-COLOR 'red)
-(define REMAINING "It been attacked, remain health point ")
+(define REMAINING "Remain turn point ")
 (define INSTRACTION-TEXT (text "Ah! ah! ah! You are stuck in this Orc Battle World"
                                INSTRUCTION-TEXT-SIZE
                                INSTRUCTION-COLOR))
@@ -87,7 +89,7 @@
        mx))
 
 (define (stab-orc an-orc)
-  (set-monster-health! an-orc (- (monster-health an-orc) DAMAGE)))
+  (set-monster-health! an-orc (interval- (monster-health an-orc) DAMAGE)))
 
 (define (player-update! setter selector mx)
   (lambda (player delta)
@@ -231,6 +233,8 @@
     [(zero? (orc-world-attack# world)) (void)]
     [(key=? "s" key) (stab world)]
     [(key=? "h" key) (heal world)]
+    [(key=? "a" key) (regain-agility world)]
+    [(key=? "t" key) (regain-strength world)]
     [(key=? "f" key) (flail world)]
     [(key=? "e" key) (end-turn world)]
     [(key=? "n" key) (initialize-orc-world)]
@@ -256,6 +260,19 @@
   (displayln "heal")
   (decrease-attack# world)
   (player-health+ (orc-world-player world) HEALING))
+
+
+(define (regain-agility world)
+  (displayln "regain agility")
+  (decrease-attack# world)
+  (player-agility+ (orc-world-player world) AGILITY-GAIN))
+
+
+(define (regain-strength world)
+  (displayln "regain strength")
+  (decrease-attack# world)
+  (player-strength+ (orc-world-player world) STRENGTH-GAIN))
+
 
 (define (flail world)
   (displayln "flail")
@@ -333,7 +350,7 @@
 
 
 (define (initialize-player)
-  (player MAX-HEALTH MAX-AGILITY MAX-STRENGTH))
+  (player MAX-HEALTH (random+ MAX-AGILITY) (random+ MAX-STRENGTH)))
 
 
 (define (initialize-monsters)
@@ -342,7 +359,7 @@
    (lambda (_)
      (define health (random+ MONSTER-HEALTH0))
      (case (random 4)
-       [(0) (orc ORC-IMAGE health (random CLUB-STRENGTH))]
+       [(0) (orc ORC-IMAGE health (random+ CLUB-STRENGTH))]
        [(1) (hydra HYDRA-IMAGE health)]
        [(2) (slime SLIME-IMAGE health (random+ SLIMINESS))]
        [(3) (brigand BRIGAND-IMAGE health)]))))
