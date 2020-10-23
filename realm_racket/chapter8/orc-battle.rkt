@@ -5,11 +5,12 @@
 ;; orc-world (player list-of-monsters how-many-attacks-the player-may-execute)
 (struct orc-world (player lom attack# target) #:mutable)
 
-(struct player (health agility strength) #:mutable #:transparent)
+(struct player (health agility strength armor) #:mutable #:transparent)
 
 (define MAX-HEALTH 35)
 (define MAX-AGILITY 35)
 (define MAX-STRENGTH 35)
+(define MAX-ARMOR 35)
 
 (define MONSTER-HEALTH0 9)
 (define CLUB-STRENGTH 10)
@@ -18,6 +19,7 @@
 (define HEALING 2)
 (define AGILITY-GAIN 2)
 (define STRENGTH-GAIN 2)
+(define ARMOR-GAIN 5)
 (define STAB-DAMAGE 2)
 
 (define FLAIL-DAMAGE 4)
@@ -49,6 +51,8 @@
 (define AGILITY "Agility")
 (define HEALTH-COLOR "RED")
 (define HEALTH "Health")
+(define ARMOR-COLOR "gold")
+(define ARMOR "Armor")
 
 (define HEALTH-BAR-WIDTH 60)
 (define HEALTH-BAR-HEIGH 10)
@@ -173,6 +177,7 @@
   (define s (player-strength p))
   (define a (player-agility p))
   (define h (player-health p))
+  (define armor (player-armor p))
   (above/align
    "left"
    (status-bar s MAX-STRENGTH STRENGTH-COLOR STRENGTH)
@@ -180,6 +185,8 @@
    (status-bar a MAX-AGILITY AGILITY-COLOR AGILITY)
    V-SPACER
    (status-bar h MAX-HEALTH HEALTH-COLOR HEALTH)
+   V-SPACER
+   (status-bar armor MAX-HEALTH ARMOR-COLOR ARMOR)
    V-SPACER V-SPACER V-SPACER
    PLAYER-IMAGE))
 
@@ -235,6 +242,7 @@
     [(key=? "h" key) (heal world)]
     [(key=? "a" key) (regain-agility world)]
     [(key=? "t" key) (regain-strength world)]
+    [(key=? "d" key) (equipment-shield world)]
     [(key=? "f" key) (flail world)]
     [(key=? "e" key) (end-turn world)]
     [(key=? "n" key) (initialize-orc-world)]
@@ -273,6 +281,11 @@
   (decrease-attack# world)
   (player-strength+ (orc-world-player world) STRENGTH-GAIN))
 
+(define (equipment-shield world)
+  (define p (orc-world-player world))
+  (when (= (player-armor p) 0)
+    (decrease-attack# world)
+    (set-player-armor! p ARMOR-GAIN)))
 
 (define (flail world)
   (displayln "flail")
@@ -298,6 +311,16 @@
 
 (define (damage-monster m delta)
   (set-monster-health! m (interval- (monster-health m) delta)))
+
+
+(define (damage-player p damage)
+  (cond
+    [(> (player-armor p) 0)
+     (define current-armor (player-armor p))
+     (set-player-armor! p (interval- current-armor damage))
+     (player-health+ p (interval- damage current-armor))]
+    [else
+     (player-health+ p damage)]))
 
 
 (define (interval- base delta)
@@ -329,28 +352,24 @@
   (define (one-monster-attacks-player m)
     (cond
       [(orc? m)
-       (player-health+ player (random- (orc-club m)))]
+       (damage-player player (random+ (orc-club m)))]
       [(hydra? m)
-       (player-health+ player (random- (monster-health m)))]
+       (damage-player player (random+ (monster-health m)))]
       [(slime? m)
-       (player-health+ player -1)
-       (player-agility+ player (random- (slime-sliminess m)))]
+       (damage-player player -1)
+       (player-agility+ player (- (random+ (slime-sliminess m))))]
       [(brigand? m)
        (case (random 3)
-         [(0) (player-health+ player HEALTH-DAMAGE)]
-         [(1) (player-agility+ player AGILITY-DAMAGE)]
-         [(2) (player-strength+ player STRENGTH-DAMAGE)])]))
+         [(0) (damage-player player HEALTH-DAMAGE)]
+         [(1) (player-agility+ player (- AGILITY-DAMAGE))]
+         [(2) (player-strength+ player (- STRENGTH-DAMAGE))])]))
 
   (define live-monsters (filter monster-alive? lom))
   (for-each one-monster-attacks-player live-monsters))
 
 
-(define (random- num)
-  (- (random num)))
-
-
 (define (initialize-player)
-  (player MAX-HEALTH (random+ MAX-AGILITY) (random+ MAX-STRENGTH)))
+  (player MAX-HEALTH MAX-AGILITY MAX-STRENGTH 0))
 
 
 (define (initialize-monsters)
@@ -392,14 +411,14 @@
 
 (module+ test
   (require rackunit rackunit/text-ui)
-  (check-equal?  (let ([p (player 1 2 3)])
+  (check-equal?  (let ([p (player 1 2 3 4)])
                    (player-health+ p 5)
                    p)
-                 (player 6 2 3))
+                 (player 6 2 3 4))
 
-  (check-equal? (let ([p (player 1 2 3)])
+  (check-equal? (let ([p (player 1 2 3 3)])
                   (player-strength+ p -3)
                   p)
-                (player 1 2 0))
+                (player 1 2 0 3))
 
   "all tests run")
