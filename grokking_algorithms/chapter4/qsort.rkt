@@ -4,11 +4,19 @@
   (cond
     [(<= (length lst) 1) lst]
     [else
-     (define pivote (car lst))
-     (append (qsort (less-than pivote (cdr lst)))
+     (define-values (pivote index) (choose lst))
+     (define rest (drop= lst index))
+     (append (qsort (less-than pivote rest))
              (list pivote)
-             (qsort (bigger-than pivote (cdr lst))))
+             (qsort (bigger-than pivote rest)))
      ]))
+
+(define (choose lst)
+  (define index (random (length lst)))
+  (values (list-ref lst index) index))
+
+(define (drop= lst index)
+  (append (take lst index) (drop lst (+ 1 index))))
 
 (define (less-than p lst)
   (filter (lambda (n) (<= n p)) lst))
