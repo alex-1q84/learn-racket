@@ -22,6 +22,22 @@
 
 (apply * (tow-entry-of-2020 lnums))
 
+(define sum/2020 (for*/list ([a (in-list lnums)]
+            [b (in-list lnums)]
+            [c (in-list lnums)]
+            #:unless (eqv? a b)
+            #:unless (eqv? b c)
+            #:when (= 2020 (+ a b c)))
+  (list a b c)))
+
+(define (*/sum lsums)
+  (cond
+    [(null? lsums) null]
+    [else
+     (cons (apply * (car lsums)) (*/sum (cdr lsums)))]))
+
+(*/sum sum/2020)
+
 (module+ test
   (require rackunit)
 
