@@ -20,19 +20,15 @@
        (<= key-count (upper-num pwd-and-policy))))
 
 (define (validate-key-char-pos pwd-and-policy)
-  (cond [(eq?/pos (password pwd-and-policy)
+  (if (eq?/pos (password pwd-and-policy)
                        (lower-num pwd-and-policy)
                        (key-char pwd-and-policy))
-         (not (eq?/pos (password pwd-and-policy)
+      (not (eq?/pos (password pwd-and-policy)
                        (upper-num pwd-and-policy)
-                       (key-char pwd-and-policy)))]
-        [(not (eq?/pos (password pwd-and-policy)
-                       (lower-num pwd-and-policy)
                        (key-char pwd-and-policy)))
-         (eq?/pos (password pwd-and-policy)
+      (eq?/pos (password pwd-and-policy)
                        (upper-num pwd-and-policy)
-                       (key-char pwd-and-policy))]
-        [else #f]))
+                       (key-char pwd-and-policy))))
 
 (define (eq?/pos str pos ch)
   (eq? (string-ref str (sub1 pos))
