@@ -16,7 +16,7 @@
                 ([line (in-lines in)])
         (cond
           [(string=? line "")
-           ; 使用 values 方法确保返回结果的数量和顺序跟 for/fold 方法初始化参数是一致的
+           ; 使用 values 方法确保返回结果的数量和顺序跟 for/fold 方法初始
            (values (cons passport passports) (hash))]
           [else
            (define line-in (open-input-string line))
