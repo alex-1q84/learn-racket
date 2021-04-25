@@ -55,7 +55,14 @@
 (define (take-seat-column-def sr)
   (take-right sr 3))
 
-(apply max (map seat-id seats))
+(define seat-ids (sort (map seat-id seats) <))
+(apply max seat-ids)
+
+(for/fold ([last-id (car seat-ids)]
+           #:result (add1 last-id))
+          ([curr-seat-id (in-list (cdr seat-ids))]
+           #:break (> (- curr-seat-id last-id) 1))
+  curr-seat-id)
 
 (module+ test
   (require rackunit)
