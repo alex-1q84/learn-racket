@@ -1,6 +1,9 @@
 #lang racket
 (require racket/match)
 
+;;============================
+;;       question 1
+;;============================
 (define answer-groups
   (call-with-input-file "input06.txt"
     (lambda (in)
@@ -23,6 +26,32 @@
 (apply + (map
           (compose1 length set->list)
           answer-groups))
+
+;;============================
+;;       question 2
+;;============================
+
+(define (default-set)
+  ((compose1 list->set string->list) "abcdefghijklmnopqrstuvwxyz"))
+
+(define everyone-answer-groups
+  (call-with-input-file "input06.txt"
+    (lambda (in)
+      (for/fold ([everyone-answer-groups null]
+                 [answers (default-set)]
+                 #:result (reverse
+                           (filter (compose1 not set-empty?)
+                                   (cons answers everyone-answer-groups))))
+                ([line (in-lines in)])
+        (cond
+          [(string=? line "")
+           (values (cons answers everyone-answer-groups) (default-set))]
+          [else
+           (values everyone-answer-groups (set-intersect answers (list->set (string->list line))))
+           ])))))
+
+(apply + (map (compose1 length set->list)
+              everyone-answer-groups))
 
 (module+ test
   (require rackunit)
