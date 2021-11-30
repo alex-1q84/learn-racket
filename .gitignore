@@ -119,3 +119,6 @@ target/
 .#*
 build
 compiled
+
+# racket
+.Rhistory
