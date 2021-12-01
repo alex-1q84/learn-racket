@@ -56,8 +56,11 @@
 (define (patch-instr instrs pos)
   (list-set instrs pos
             (match (list-ref instrs pos)
-              [(list "nop" op) (list "acc" op)]
-              [(list "acc" op) (list "nop" op)])))
+              [(list "nop" op) (list "jmp" op)]
+              [(list "jmp" op) (list "nop" op)])))
+
+;; TODO
+; 遍历整个指令集合并找出 nop jmp 指令，逐个测试并找出修改后可以最终执行完的新指令集合
 
 (define (parse-to-instructions input)
   (map parse-to-instrion (port->lines input)))
