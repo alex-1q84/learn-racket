@@ -10,10 +10,6 @@
 (define (nop opnum)
   (next-pos))
 
-(define (count-pos-executions pos)
-  (hash-set! *instr-exec-counts* pos
-             (add1 (hash-ref *instr-exec-counts* pos 0))))
-
 (define (acc opnum)
   (next-pos)
   (set! *acc* (+ *acc* opnum)))
@@ -22,9 +18,12 @@
   (set! *pos* (+ *pos* opnum)))
 
 (define (exec-game-instructions)
+  ;需要知道退出状态是正常执行完退出还是指令重复执行而退出
+  ; return 'state acc
   (cond
-    [(empty? *instructions*) *acc*]
-    [(pos-executed? *pos*) *acc*]
+    [(empty? *instructions*) (values 'end *acc*)]
+    [(pos-executed? *pos*) (values 'break *acc*)]
+    [(all-instr-executed?) (values 'end *acc*)]
     [else
      (match (instr-at-pos *pos*)
        [#f *acc*]
@@ -39,8 +38,16 @@
         (count-pos-executions *pos*)
         (exec-game-instructions)])]))
 
+(define (all-instr-executed?)
+  (eq? (hash-count *instr-exec-counts*)
+       (length *instructions*)))
+
+(define (count-pos-executions pos)
+  (hash-set! *instr-exec-counts* pos
+             (add1 (hash-ref *instr-exec-counts* pos 0))))
+
 (define (pos-executed? pos)
-  (> (hash-ref *instr-exec-counts* *pos* 0) 0))
+  (> (hash-ref *instr-exec-counts* pos 0) 1))
 
 (define (instr-at-pos pos)
   (with-handlers ([exn:fail:contract?
