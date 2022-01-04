@@ -77,7 +77,8 @@
     [(member dir '(L R)) (ferry-waypoint-pos
                           (ferry-waypoint-pos-ferry-p p)
                           (ferry-waypoint/rotate (ferry-waypoint-pos-rel-wp-p p) dir (cadr act)))]
-    [(member dir '(W E S N F)) (ferry-waypoint/move p dir (cadr act))]))
+    [(member dir '(W E S N F)) (ferry-waypoint/move p dir (cadr act))]
+    [else (displayln dir)]))
 
 ;; 货船路点整体系统移动计算方法
 (define (ferry-waypoint/move p dir delta)
@@ -125,10 +126,10 @@
 
 (define (waypoint/rotate-left p)
   (cond
-    [(and (> (pos-we p) 0)
+    [(and (>= (pos-we p) 0)
           (>= (pos-sn p) 0))
      (pos (- (pos-sn p)) (pos-we p))]
-    [(and (> (pos-we p) 0)
+    [(and (>= (pos-we p) 0)
           (< (pos-sn p) 0))
      (pos (- (pos-sn p)) (pos-we p))]
     [(and (< (pos-we p) 0)
@@ -140,10 +141,10 @@
 
 (define (waypoint/rotate-right p)
   (cond
-    [(and (> (pos-we p) 0)
+    [(and (>= (pos-we p) 0)
           (>= (pos-sn p) 0))
      (pos (pos-sn p) (- (pos-we p)))]
-    [(and (> (pos-we p) 0)
+    [(and (>= (pos-we p) 0)
           (< (pos-sn p) 0))
      (pos (pos-sn p) (- (pos-we p)))]
     [(and (< (pos-we p) 0)
@@ -151,7 +152,7 @@
      (pos (pos-sn p) (- (pos-we p)))]
     [(and (< (pos-we p) 0)
           (< (pos-sn p) 0))
-     (pos (pos-sn p) (pos-we p))]))
+     (pos (pos-sn p) (- (pos-we p)))]))
 
 (define (degree->facing degree)
   (match degree
@@ -180,6 +181,12 @@
 (let ([actions (list->actions (port->list read-line (open-input-file "input12.txt")))])
   (manhattan-distance (ferry/move-through (ferry-pos 0 0 0) actions)))
 
+(let ([actions (list->actions (port->list read-line (open-input-file "input12.txt")))])
+  (manhattan-distance (ferry-waypoint-pos-ferry-p
+                       (ferry-waypoint/move-through (ferry-waypoint-pos (pos 0 0) (pos 10 1)) actions))))
+
+
+
 (module+ test
   (require rackunit)
 
@@ -205,9 +212,11 @@
   (check-equal? (waypoint/rotate-right (pos 3 2)) (pos 2 -3))
   (check-equal? (waypoint/rotate-right (pos 3 -2)) (pos -2 -3))
   (check-equal? (waypoint/rotate-right (pos -3 2)) (pos 2 3))
-  (check-equal? (waypoint/rotate-right (pos -3 -2)) (pos -2 -3))
+  (check-equal? (waypoint/rotate-right (pos -3 -2)) (pos -2 3))
 
   (check-equal? (ferry-waypoint/rotate (pos 3 2) 'L 180) (pos -3 -2))
+
+  (check-equal? (ferry-waypoint/rotate (pos 0 14) 'L 90) (pos -14 0))
 
   (check-equal? (ferry-waypoint/move (ferry-waypoint-pos (pos 0 0) (pos 10 1)) 'F 2)
                 (ferry-waypoint-pos (pos 20 2) (pos 10 1)))
