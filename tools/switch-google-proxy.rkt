@@ -7,9 +7,10 @@
 (define GOOGLE-TOG-STATUS #f)
 
 (define (toggle-google-proxy! action-file)
-  (define confs (call-with-input-file action-file
-                  (lambda (in)
-                    (toggle-proxy (read-lines in)))))
+  (define confs
+    (call-with-input-file action-file
+      (lambda (in)
+        (toggle-proxy (read-lines in)))))
   (call-with-output-file action-file
     #:exists 'replace
     (lambda (out)
@@ -17,11 +18,9 @@
   (display-toggle-status GOOGLE-TOG-STATUS "google"))
 
 (define (read-lines in)
-  "read all lines from input port"
-  (let ([line (read-line in)])
-    (if (eof-object? line)
-        null
-        (cons line (read-lines in)))))
+  ;;; read all lines from input port
+  (for/list ([line (in-lines in)])
+   line))
 
 (define (toggle-proxy confs)
   (if (empty? confs)
