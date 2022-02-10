@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require racket/match)
+(require racket/list
+         racket/match)
 
 (define mask-re #px"mask = (.{36})")
 (define mem-re #px"mem\\[(.+)\\] = (.+)")
@@ -63,3 +64,41 @@
     (hash-set mem
               (assignment-addr a)
               (mask-apply m (assignment-val a)))))
+
+part1
+;; ==================== part2 =======================
+
+(define all-zero
+  (make-list 36 #\0))
+
+(define (pre-mask m n)
+  (for/fold ([chars null] #:result (apply string chars))
+            ([c1 (in-list (reverse (string->list m)))]
+             ;; 用 in-cycle 和 all-zero 来补齐转换后的二进制串长度不够的位
+             [c2 (in-cycle (reverse (string->list (number->string n 2))) all-zero)])
+    (case c1
+      [(#\X) (cons #\X chars)]
+      [(#\0) (cons c2 chars)]
+      [(#\1) (cons c1 chars)])))
+
+(define (mask->addrs m)
+  (let loop ([cs (reverse (string->list m))]
+             [n 0]
+             [s 0])
+    (match cs
+      [(? null?) (list n)]
+      [(cons #\0 cs) (loop cs n (add1 s))]
+      [(cons #\1 cs) (loop cs (bitwise-ior n (arithmetic-shift 1 s)) (add1 s))]
+      [(cons #\X cs) (append
+                      (loop cs n (add1 s))
+                      (loop cs (bitwise-ior n (arithmetic-shift 1 s)) (add1 s)))])))
+
+(define part2
+  (for*/fold ([mem (hash)] #:result (apply + (hash-values mem)))
+             ([g (in-list groups)]
+              [m (in-value (group-mask g))]
+              [a (in-list (group-assignments g))]
+              [l (in-list (mask->addrs (pre-mask m (assignment-addr a))))])
+    (hash-set mem l (assignment-val a))))
+
+part2
