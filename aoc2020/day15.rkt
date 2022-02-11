@@ -26,3 +26,5 @@
     new-count))
 
 (interp start-nums 2020)
+
+(time (interp start-nums 30000000))
