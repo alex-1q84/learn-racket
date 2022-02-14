@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require racket/list
+         racket/set
          racket/string
          racket/match)
 
@@ -59,21 +60,111 @@
                       (cons (map string->number (string-split line ",")) nearby-tickets)
                       in-your-ticket-group?)])])))))
 
+(define (validate-range? num r)
+  (and (>= num (num-range-low r))
+       (<= num (num-range-high r))))
 
-(define (error-rate tickets valids)
-  (define (validate? num r)
-    (and (>= num (num-range-low r))
-         (<= num (num-range-high r))))
+;; valids 所有验证规则清单 list
+(define (valid-all-ranges? num valids)
+  (for/fold ([valid? #f])
+            ([v (in-list valids)])
+    (or valid? (validate-range? num (first v)) (validate-range? num (second v)))))
 
-  (define (_check num valids)
-    (for/fold ([valid? #f])
-              ([v (in-list (hash-values valids))])
-      (or valid? (validate? num (first v)) (validate? num (second v)))))
-
+(define (error-rate ticket valids)
   (for*/fold ([rate 0])
-             ([t (in-list tickets)]
-              [n (in-list t)])
+             ([n (in-list ticket)])
     (+ rate
-       (if (_check n valids) 0 n))))
+       (if (valid-all-ranges? n valids) 0 n))))
 
-(error-rate (cons your-ticket nearby-tickets) validators)
+(define (count-total-error-rate tickets valids)
+  (for*/fold ([rate 0])
+             ([t (in-list tickets)])
+    (+ rate (error-rate t (hash-values valids)))))
+
+(count-total-error-rate (cons your-ticket nearby-tickets) validators)
+
+;; ========================= part 2 ===========================
+
+(define (pick-valid-tickets tickets valids)
+  (for*/fold ([tiks null])
+             ([t (in-list tickets)])
+    (if (= (error-rate t (hash-values valids)) 0)
+        (cons t tiks)
+        tiks)))
+
+;; 测试给定约束是否对全部有效车票的指定位数字适用，如果适用则认为这个约束是用于这个位的，
+;; 用 hash 表存储约束和数字位置的对应关系
+
+(define (group-by-pos tickets)
+  (for*/fold ([groups (hash)])
+             ([t (in-list tickets)]
+              [(n i) (in-indexed t)])
+    (hash-set groups i (cons n (hash-ref groups i null)))))
+
+(define (validator->poses-mapping valids tickets)
+  (define pos-nums (group-by-pos tickets))
+  (for/fold ([mapping (hash)])
+            ([kv (in-hash-pairs valids)])
+    (hash-set mapping (car kv) (possible-poses (cdr kv) pos-nums))))
+
+(define (possible-poses r groups)
+  (for/fold ([poses null])
+            ([kv (in-hash-pairs groups)])
+    (if (= (error-rate (cdr kv) (list r)) 0)
+        (cons (car kv) poses)
+        poses)))
+
+(define (find-pos-valid-mapping pos-valids-mappings)
+  (let loop ([m (hash)] [used-vs (set)] [pvm pos-valids-mappings])
+    (cond
+      [(hash-empty? pvm) m]
+      [else
+       (define-values (_m _vs _pvm)
+         (for/fold ([m* m] [used-vs* used-vs] [pvm* pvm])
+                   ([kv (in-hash-pairs pvm)])
+           (if (only-one (cdr kv))
+               (values (hash-set m* (car kv) (cadr kv))
+                       (set-add used-vs* (cadr kv))
+                       (hash-remove pvm* (car kv)))
+               (values m*
+                       used-vs*
+                       (hash-set pvm* (car kv) (remove-used-valids (cdr kv) used-vs*))))))
+       (loop _m _vs _pvm)])))
+
+(define (only-one lst)
+  (= (length lst) 1))
+
+(define (remove-used-valids lst a-set)
+  (for/fold ([r null])
+            ([v (in-list lst)])
+    (if (set-member? a-set v)
+        r
+        (cons v r))))
+
+(define (multiply-departure-nums ticket valid-pos-mapping)
+  (define v-ticket (list->vector ticket))
+  (for/fold ([nums null] #:result (apply * nums))
+            ([kv (in-hash-pairs valid-pos-mapping)])
+    (if (string-prefix? (car kv) "departure")
+        (cons (vector-ref v-ticket (cdr kv)) nums)
+        nums)))
+
+(define valid-tickets
+  (map list->vector (pick-valid-tickets nearby-tickets validators)))
+
+(define valid-poses-mappings (validator->poses-mapping validators valid-tickets))
+
+(define pos-valids-mappings
+  (for*/fold ([m (hash)])
+             ([kv (in-hash-pairs valid-poses-mappings)]
+              [p (in-list (cdr kv))])
+    (hash-set m p (cons (car kv) (hash-ref m p null)))))
+
+(define pos-valid-mapping (find-pos-valid-mapping pos-valids-mappings))
+
+(define valid-pos-mapping
+  (for/fold ([m (hash)])
+            ([kv (in-hash-pairs pos-valid-mapping)])
+    (hash-set m (cdr kv) (car kv))))
+
+(multiply-departure-nums your-ticket valid-pos-mapping)
