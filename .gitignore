@@ -122,3 +122,6 @@ compiled
 
 # racket
 .Rhistory
+
+.vscode
+.watchman*
