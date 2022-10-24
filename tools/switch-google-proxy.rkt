@@ -6,56 +6,84 @@
          racket/port
          racket/match)
 
-(define GOOGLE-TOG-STATUS #f)
 
 ;; ============== toggle google proxy =============
-(define (toggle-google-proxy rule-groups)
-  (begin0
-      (hash-set rule-groups "ssh" (toggle-proxy (hash-ref rule-groups "ssh")))
-    (display-toggle-status GOOGLE-TOG-STATUS "google")))
+(define (toggle-google-proxy enable? rule-groups)
+  (let ([rule-name "google"]
+        [rule-group "ssh"])
+    (begin0
+      (hash-set rule-groups rule-group (toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
+      (display-toggle-status enable? rule-name))))
+
+
+(define (rule-begin rule-name)
+  (format "# ~A-begin" rule-name))
+
+
+(define (rule-end rule-name)
+  (format "# ~A-end" rule-name))
+
+
+(define (begin-rule-border? conf rule-name)
+  (string-prefix? conf (rule-begin rule-name)))
+
+(define (end-rule-border? conf rule-name)
+  (string-prefix? conf (rule-end rule-name)))
 
 (define is-google? #f)
-(define (toggle-proxy confs)
+(define (toggle-proxy rule-name enable? confs)
   (define (google-conf? conf)
-    (cond [(string-prefix? conf "# google-begin")
+    (cond [(begin-rule-border? conf rule-name)
            (begin0
-               is-google?
+             is-google?
              (set! is-google? #t))]
-          [(string-prefix? conf "# google-end")
+          [(end-rule-border? conf rule-name)
            (set! is-google? #f)
            is-google?]
           [else is-google?]))
 
   (define (tog conf need-tog)
     (if need-tog
-        (if (string-prefix? conf "#")
-            (begin
-              (when (not GOOGLE-TOG-STATUS)
-                (set! GOOGLE-TOG-STATUS #t))
-              (substring conf 1))
-            (string-append "#" conf))
+        (if enable?
+            (turn-on-rule conf)
+            (turn-off-rule conf))
         conf))
 
   (if (empty? confs)
       null
       (cons (tog (first confs) (google-conf? (first confs)))
-            (toggle-proxy (rest confs)))))
+            (toggle-proxy rule-name enable? (rest confs)))))
+
+
+(define (turn-on-rule conf)
+  (if (string-prefix? conf "#")
+      (substring conf 1)
+      conf))
+
+
+(define (turn-off-rule conf)
+  (if (string-prefix? conf "#")
+      conf
+      (string-append "#" conf)))
+
 
 (define (write-lines lst out)
   (for ([line (in-list lst)])
     (displayln line out)))
+
 
 (define (display-toggle-status status name)
   (if status
       (displayln (format "turn ~A proxy on" name))
       (displayln (format "turn ~A proxy off" name))))
 
+
 ;; ================= append rule ===================
 (define (url->rule url)
   (define domain
     (match url
-     [(regexp #px"\\w+://([^/]+).*" (list _ domain)) domain]
-     [else #f]))
+      [(regexp #px"\\w+://([^/]+).*" (list _ domain)) domain]
+      [else #f]))
   (cond
     [domain (if (string-prefix? domain "www.")
                 (string-replace domain "www" "" #:all? #f)
@@ -112,30 +140,36 @@
     (lambda (in)
       (port->lines in))))
 
-(define toggle-google? (make-parameter #f))
+
+(define (echo p)
+  (displayln p))
+
+
+(define enable-google? (make-parameter #f))
+(define disable-google? (make-parameter #f))
 (define rule (make-parameter #f))
 
 (define (main)
+  (define (switch-google-proxy enable?)
+    (define action-file "/usr/local/etc/privoxy/wall.action")
+    (define rule-groups (parse-to-rule-groups (file->lines action-file)))
+    (rule-groups->file (toggle-google-proxy enable? rule-groups)
+                       action-file))
+  
   (command-line
    #:once-any
    ; 不带参数的指令选项
-   [("-g" "--toggle-google") "toggle google proxy rule"
-                             (toggle-google? #t)]
+   [("--google-proxy-on") "turn google proxy rule on"
+                          (switch-google-proxy #t)]
+   [("--google-proxy-off") "turn google proxy rule off"
+                           (switch-google-proxy #f)]
    ; 带参数的指令选项
    [("-a" "--append-rule") url ("" "append rule")
-                           (rule (url->rule url))])
-
-  (when (toggle-google?)
-    (define action-file "/usr/local/etc/privoxy/wall.action")
-    (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-    (rule-groups->file (toggle-google-proxy rule-groups)
-                       action-file))
-
-  (when (rule)
-    (define action-file "/usr/local/etc/privoxy/wall.action")
-    (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-    (rule-groups->file (append-rule rule-groups "ssh" (rule))
-                       action-file)))
+                           (begin
+                             (define action-file "/usr/local/etc/privoxy/wall.action")
+                             (define rule-groups (parse-to-rule-groups (file->lines action-file)))
+                             (rule-groups->file (append-rule rule-groups "ssh" (rule))
+                                                action-file))]))
 
 (main)
 
@@ -150,6 +184,11 @@
 
   (check-equal? (url->rule "http://www.abc.com") ".abc.com")
   (check-equal? (last (hash-ref (append-rule rule-groups "ssh" (url->rule "http://www.abc.com"))
-                           "ssh"))
+                                "ssh"))
                 ".abc.com")
-  (toggle-proxy (list "# google-begin -----" ".google.com" "# google-end --------")))
+
+  (check-equal? (toggle-proxy "google" #t (list "# google-begin -----" "#.google.com" "# google-end --------"))
+                (list "# google-begin -----" ".google.com" "# google-end --------"))
+ 
+  (check-equal? (toggle-proxy "google" #f (list "# google-begin -----" "#.google.com" "# google-end --------"))
+                (list "# google-begin -----" "#.google.com" "# google-end --------")))
