@@ -8,12 +8,10 @@
 
 
 ;; ============== toggle google proxy =============
-(define (toggle-google-proxy enable? rule-groups)
-  (let ([rule-name "google"]
-        [rule-group "ssh"])
-    (begin0
+(define (toggle-google-proxy rule-group rule-name enable? rule-groups)
+  (begin0
       (hash-set rule-groups rule-group (toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
-      (display-toggle-status enable? rule-name))))
+      (display-toggle-status enable? rule-name)))
 
 
 (define (rule-begin rule-name)
@@ -30,29 +28,29 @@
 (define (end-rule-border? conf rule-name)
   (string-prefix? conf (rule-end rule-name)))
 
-(define is-google? #f)
-(define (toggle-proxy rule-name enable? confs)
-  (define (google-conf? conf)
-    (cond [(begin-rule-border? conf rule-name)
+(define in-given-rule-seg? #f)
+(define (toggle-proxy rule-name enable? rules)
+  (define (in-given-rule-segment? rule)
+    (cond [(begin-rule-border? rule rule-name)
            (begin0
-             is-google?
-             (set! is-google? #t))]
-          [(end-rule-border? conf rule-name)
-           (set! is-google? #f)
-           is-google?]
-          [else is-google?]))
+             in-given-rule-seg?
+             (set! in-given-rule-seg? #t))]
+          [(end-rule-border? rule rule-name)
+           (set! in-given-rule-seg? #f)
+           in-given-rule-seg?]
+          [else in-given-rule-seg?]))
 
-  (define (tog conf need-tog)
+  (define (tog rule need-tog)
     (if need-tog
         (if enable?
-            (turn-on-rule conf)
-            (turn-off-rule conf))
-        conf))
+            (turn-on-rule rule)
+            (turn-off-rule rule))
+        rule))
 
-  (if (empty? confs)
+  (if (empty? rules)
       null
-      (cons (tog (first confs) (google-conf? (first confs)))
-            (toggle-proxy rule-name enable? (rest confs)))))
+      (cons (tog (first rules) (in-given-rule-segment? (first rules)))
+            (toggle-proxy rule-name enable? (rest rules)))))
 
 
 (define (turn-on-rule conf)
@@ -141,19 +139,13 @@
       (port->lines in))))
 
 
-(define (echo p)
-  (displayln p))
-
-
-(define enable-google? (make-parameter #f))
-(define disable-google? (make-parameter #f))
 (define rule (make-parameter #f))
 
 (define (main)
   (define (switch-google-proxy enable?)
     (define action-file "/usr/local/etc/privoxy/wall.action")
     (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-    (rule-groups->file (toggle-google-proxy enable? rule-groups)
+    (rule-groups->file (toggle-google-proxy "ssh" "google" enable? rule-groups)
                        action-file))
   
   (command-line
