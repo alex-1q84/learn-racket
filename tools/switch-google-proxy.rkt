@@ -10,8 +10,8 @@
 ;; ============== toggle google proxy =============
 (define (toggle-google-proxy rule-group rule-name enable? rule-groups)
   (begin0
-      (hash-set rule-groups rule-group (toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
-      (display-toggle-status enable? rule-name)))
+    (hash-set rule-groups rule-group (toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
+    (display-toggle-status enable? rule-name)))
 
 
 (define (rule-begin rule-name)
@@ -89,14 +89,19 @@
     [else #f]))
 
 (define (append-rule rule-groups group-name rule)
-  (define rules (hash-ref rule-groups group-name))
   (cond
-    [rules
+    [(string? rule)
+     (define rules (hash-ref rule-groups group-name))
      (cond
-       [(not (member rule rules))
-        (hash-set rule-groups group-name (append rules (list rule)))]
-       [else rule-groups])]
+       [rules
+        (cond
+          [(not (member rule rules))
+           (hash-set rule-groups group-name (append rules (list rule)))]
+          [else rule-groups])]
+       [else
+        rule-groups])]
     [else
+     (displayln (format "~A is not a valid rule" rule))
      rule-groups]))
 
 (define (display-rule-group title rules [port (current-output-port)])
@@ -125,6 +130,7 @@
        (values (hash-set groups group-name (append group (list rule)))
                group-name)])))
 
+;; if write successful then replace the orignal file
 (define (rule-groups->file rule-groups file-path)
   (call-with-output-file file-path
     #:exists 'replace
@@ -133,13 +139,12 @@
       (display-rule-group "default" (hash-ref rule-groups "default" #f) out)
       (display-rule-group "ssh" (hash-ref rule-groups "ssh" #f) out))))
 
+
 (define (file->lines file-path)
   (call-with-input-file* file-path
     (lambda (in)
       (port->lines in))))
 
-
-(define rule (make-parameter #f))
 
 (define (main)
   (define (switch-google-proxy enable?)
@@ -160,7 +165,7 @@
                            (begin
                              (define action-file "/usr/local/etc/privoxy/wall.action")
                              (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-                             (rule-groups->file (append-rule rule-groups "ssh" (rule))
+                             (rule-groups->file (append-rule rule-groups "ssh" (url->rule url))
                                                 action-file))]))
 
 (main)
