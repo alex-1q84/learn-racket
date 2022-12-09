@@ -1,9 +1,10 @@
 DEST=switch-google-proxy
-$(DEST): $(DEST).rkt
-	raco exe $(DEST).rkt
 
 install: $(DEST)
 	mv $(DEST) ~/bin/
+
+$(DEST): $(DEST).rkt
+	raco exe $(DEST).rkt
 
 clean:
 	rm $(DEST)

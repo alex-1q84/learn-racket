@@ -8,9 +8,9 @@
 
 
 ;; ============== toggle google proxy =============
-(define (toggle-google-proxy rule-group rule-name enable? rule-groups)
+(define (toggle-proxy rule-group rule-name enable? rule-groups)
   (begin0
-    (hash-set rule-groups rule-group (toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
+    (hash-set rule-groups rule-group (rule-group/toggle-proxy rule-name enable? (hash-ref rule-groups rule-group)))
     (display-toggle-status enable? rule-name)))
 
 
@@ -29,7 +29,7 @@
   (string-prefix? conf (rule-end rule-name)))
 
 (define in-given-rule-seg? #f)
-(define (toggle-proxy rule-name enable? rules)
+(define (rule-group/toggle-proxy rule-name enable? rules)
   (define (in-given-rule-segment? rule)
     (cond [(begin-rule-border? rule rule-name)
            (begin0
@@ -50,7 +50,7 @@
   (if (empty? rules)
       null
       (cons (tog (first rules) (in-given-rule-segment? (first rules)))
-            (toggle-proxy rule-name enable? (rest rules)))))
+            (rule-group/toggle-proxy rule-name enable? (rest rules)))))
 
 
 (define (turn-on-rule conf)
@@ -147,11 +147,15 @@
 
 
 (define (main)
-  (define (switch-google-proxy enable?)
-    (define action-file "/usr/local/etc/privoxy/wall.action")
+  (define (ssh/switch-proxy action-file proxy-name enable?)
     (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-    (rule-groups->file (toggle-google-proxy "ssh" "google" enable? rule-groups)
+    (rule-groups->file (toggle-proxy "ssh" proxy-name enable? rule-groups)
                        action-file))
+  
+  (define (switch-google-proxy enable?)
+    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action"
+                      "google"
+                      enable?))
   
   (command-line
    #:once-any
@@ -161,6 +165,10 @@
    [("--google-proxy-off") "turn google proxy rule off"
                            (switch-google-proxy #f)]
    ; 带参数的指令选项
+   [("--switch-on") rule ("switch on proxy rule with rule name")
+                    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action" rule #t)]
+   [("--switch-off") rule ("switch off proxy rule with rule name")
+                    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action" rule #f)]
    [("-a" "--append-rule") url ("" "append rule")
                            (begin
                              (define action-file "/usr/local/etc/privoxy/wall.action")
@@ -184,8 +192,8 @@
                                 "ssh"))
                 ".abc.com")
 
-  (check-equal? (toggle-proxy "google" #t (list "# google-begin -----" "#.google.com" "# google-end --------"))
+  (check-equal? (rule-group/toggle-proxy "google" #t (list "# google-begin -----" "#.google.com" "# google-end --------"))
                 (list "# google-begin -----" ".google.com" "# google-end --------"))
  
-  (check-equal? (toggle-proxy "google" #f (list "# google-begin -----" "#.google.com" "# google-end --------"))
+  (check-equal? (rule-group/toggle-proxy "google" #f (list "# google-begin -----" "#.google.com" "# google-end --------"))
                 (list "# google-begin -----" "#.google.com" "# google-end --------")))
