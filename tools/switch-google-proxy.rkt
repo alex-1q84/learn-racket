@@ -147,13 +147,15 @@
 
 
 (define (main)
+  (define action-file "/usr/local/etc/privoxy/wall.action")
+  
   (define (ssh/switch-proxy action-file proxy-name enable?)
     (define rule-groups (parse-to-rule-groups (file->lines action-file)))
     (rule-groups->file (toggle-proxy "ssh" proxy-name enable? rule-groups)
                        action-file))
   
   (define (switch-google-proxy enable?)
-    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action"
+    (ssh/switch-proxy action-file
                       "google"
                       enable?))
   
@@ -166,12 +168,12 @@
                            (switch-google-proxy #f)]
    ; 带参数的指令选项
    [("--switch-on") rule ("switch on proxy rule with rule name")
-                    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action" rule #t)]
+                    (ssh/switch-proxy action-file rule #t)]
    [("--switch-off") rule ("switch off proxy rule with rule name")
-                    (ssh/switch-proxy "/usr/local/etc/privoxy/wall.action" rule #f)]
+                    (ssh/switch-proxy action-file rule #f)]
    [("-a" "--append-rule") url ("" "append rule")
                            (begin
-                             (define action-file "/usr/local/etc/privoxy/wall.action")
+                             (define action-file action-file)
                              (define rule-groups (parse-to-rule-groups (file->lines action-file)))
                              (rule-groups->file (append-rule rule-groups "ssh" (url->rule url))
                                                 action-file))]))
