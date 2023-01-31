@@ -150,13 +150,27 @@
   (define action-file "/usr/local/etc/privoxy/wall.action")
   
   (define (ssh/switch-proxy action-file proxy-name enable?)
+    (switch-proxy action-file "ssh" proxy-name enable?))
+
+  (define (default/switch-proxy action-file proxy-name enable?)
+    (switch-proxy action-file "default" proxy-name enable?))
+  
+  (define (switch-proxy action-file rule-group proxy-name enable?)
     (define rule-groups (parse-to-rule-groups (file->lines action-file)))
-    (rule-groups->file (toggle-proxy "ssh" proxy-name enable? rule-groups)
+    (rule-groups->file (toggle-proxy rule-group proxy-name enable? rule-groups)
                        action-file))
   
   (define (switch-google-proxy enable?)
     (ssh/switch-proxy action-file
                       "google"
+                      enable?))
+
+  (define (switch-full-proxy enable?)
+    (default/switch-proxy action-file
+                          "pass-through"
+                          (not enable?))
+    (ssh/switch-proxy action-file
+                      "pass-through"
                       enable?))
   
   (command-line
@@ -166,6 +180,10 @@
                           (switch-google-proxy #t)]
    [("--google-proxy-off") "turn google proxy rule off"
                            (switch-google-proxy #f)]
+   [("--switch-full-proxy-on") "switch full proxy on"
+                           (switch-full-proxy #t)]
+   [("--switch-full-proxy-off") "switch full proxy off"
+                           (switch-full-proxy #f)]
    ; 带参数的指令选项
    [("--switch-on") rule ("switch on proxy rule with rule name")
                     (ssh/switch-proxy action-file rule #t)]
@@ -173,7 +191,6 @@
                     (ssh/switch-proxy action-file rule #f)]
    [("-a" "--append-rule") url ("" "append rule")
                            (begin
-                             (define action-file action-file)
                              (define rule-groups (parse-to-rule-groups (file->lines action-file)))
                              (rule-groups->file (append-rule rule-groups "ssh" (url->rule url))
                                                 action-file))]))
