@@ -65,11 +65,6 @@
       (string-append "#" conf)))
 
 
-(define (write-lines lst out)
-  (for ([line (in-list lst)])
-    (displayln line out)))
-
-
 (define (display-toggle-status status name)
   (if status
       (displayln (format "turn ~A proxy on" name))
@@ -81,7 +76,7 @@
   (define domain
     (match url
       [(regexp #px"\\w+://([^/]+).*" (list _ domain)) domain]
-      [else #f]))
+      [_ #f]))
   (cond
     [domain (if (string-prefix? domain "www.")
                 (string-replace domain "www" "" #:all? #f)
@@ -125,7 +120,7 @@
       ["{ssh}"
        (values (hash-set groups "ssh" (list))
                "ssh")]
-      [else
+      [_
        (define group (hash-ref groups group-name (list)))
        (values (hash-set groups group-name (append group (list rule)))
                group-name)])))
@@ -167,10 +162,10 @@
 
   (define (switch-full-proxy enable?)
     (default/switch-proxy action-file
-                          "pass-through"
+                          "full-proxy"
                           (not enable?))
     (ssh/switch-proxy action-file
-                      "pass-through"
+                      "full-proxy"
                       enable?))
   
   (command-line
