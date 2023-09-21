@@ -30,7 +30,7 @@
     (apply + _))
 
 
-(module+ tests
+(module+ test
   (require rackunit)
 
   "all test run")
