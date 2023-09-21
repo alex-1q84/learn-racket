@@ -31,8 +31,7 @@
            (<= (first assign1) (second assign2)))
       (and (>= (second assign1) (first assign2))
            (<= (second assign1) (second assign2)))
-      (fully-contains? assign1 assign2)
-      (fully-contains? assign2 assign1)))
+      (fully-contains? assign1 assign2)))
 
 (for/sum ([assignment-pair (in-list assignment-pairs)])
   (cond
