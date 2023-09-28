@@ -48,7 +48,7 @@
              [chunk '()]
              #:result (cond
                         [(not (empty? chunk))
-                         (reverse (cons chunk result))]
+                         (reverse (cons (reverse chunk) result))]
                         [else
                          (reverse result)]))
             ([item (in-list lst)]
