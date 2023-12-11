@@ -8,12 +8,17 @@
 
 (define (init-menu)
   (hash-set*! MENU "金拱门" '(1 1)
-              "水饺" '(1 2)
+              "水饺" '(2 2)
               "秦味观" '(1 1)
               "番茄炒蛋盖浇" '(2 2)
-              "开封菜" '(1 1)))
+              "开封菜" '(1 1)
+              ))
 
 (define MEAL-HIS '())
+
+(define (list-menu)
+  (for ([(m d) (in-hash MENU)])
+    (println (format "~A : ~A" m (car d)))))
 
 (define (list-meal-his)
   (for ([m (in-list (reverse MEAL-HIS))]
@@ -68,10 +73,11 @@
                          (if (eq? 'abc (random-choice '(abc 123) '(1 5)))
                              (values (add1 a) b)
                              (values a (add1 b)))))
-  (printf (format "a ~A\nb ~A\na/b ~A" a b (exact->inexact (/ a b))))
-  (check-true (< (abs (- (/ 1 5) (/ a b))) 0.01) (format "~A" (exact->inexact (abs (- (/ 1 5) (/ a b))))))
+  ;(printf (format "a ~A\nb ~A\na/b ~A" a b (exact->inexact (/ a b))))
+  (check-true (< (abs (- (/ 1 5) (/ a b))) 0.01)
+              (format "~A" (exact->inexact (abs (- (/ 1 5) (/ a b))))))
 
-  (init-menu)
-  (for ([i (in-naturals)]) (println (what-to-eat)))
+  ;(init-menu)
+  ;(for ([i (in-naturals)]) (println (what-to-eat)))
   (println "all tests pass")
   )
