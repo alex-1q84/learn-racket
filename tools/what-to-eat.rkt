@@ -14,8 +14,7 @@
   (for ([m (in-list '(("金拱门" 1 1)
                       ("水饺" 2 2)
                       ("秦味观" 1 1)
-                      ("番茄炒蛋盖浇" 2 2)
-                      ("开封菜" 1 1)))])
+                      ("番茄炒蛋盖浇" 2 2)))])
     (add-meal (first m) (second m) (third m))))
 
 (define (get-menu)
