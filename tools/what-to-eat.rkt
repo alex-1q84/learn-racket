@@ -56,14 +56,15 @@
      (error "没有设定菜单或者您已经吃完了所有的菜")]
     [else
      (define-values (meals weights) (menu->meal-options (get-menu)))
-     (define meal (random-choice meals weights))
-     (set! MEAL-SYS (list (get-menu) (cons (symbol->string meal) (cadr MEAL-SYS))))
+     (random-choice meals weights)]))
+
+(define (eat meal)
+  (set! MEAL-SYS (list (get-menu) (cons (symbol->string meal) (cadr MEAL-SYS))))
      ; 检查本次用餐余额是不是用完了
      (define meal-def (hash-ref (get-menu) meal))
      (if (only-on-meal meal-def)
          (hash-remove! (get-menu) meal)
-         (hash-set! (get-menu) meal (eat-one meal-def)))
-     meal]))
+         (hash-set! (get-menu) meal (eat-one meal-def))))
 
 (define (eat-one meal-def)
   (list (sub1 (car meal-def)) (cadr meal-def)))
