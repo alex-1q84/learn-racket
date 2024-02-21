@@ -42,28 +42,25 @@
 (sum-priorities-of-both-apears rucksacks)
 
 ;; part two
-; split into chunks every size
-(define (split-into-chunks lst chunk-size)
-  (for/fold ([result '()]
-             [chunk '()]
-             #:result (cond
-                        [(not (empty? chunk))
-                         (reverse (cons (reverse chunk) result))]
-                        [else
-                         (reverse result)]))
-            ([item (in-list lst)]
-             [seq (in-cycle (range chunk-size))])
-    (cond
-      [(= seq (sub1 chunk-size))
-       (values (cons (reverse (cons item chunk)) result) '())]
-      [else
-       (values result (cons item chunk))])))
+; split list into chunks every size
+(define (list-chunk lst n)
+  (if (null? lst)
+      '()
+      (cons (with-handlers
+                ([exn:fail:contract?
+                  (lambda (exn) lst)])
+              (take lst n))
+            (list-chunk (with-handlers
+                            ([exn:fail:contract?
+                              (lambda (exn) '())])
+                          (drop lst n))
+                        n))))
 
 (define elf-groups
   (~> (open-input-file "input03.txt")
       port->lines
       (map string->list _)
-      (split-into-chunks _ 3)))
+      (list-chunk _ 3)))
 
 (for/sum ([g (in-list elf-groups)])
   (~> (both-contains (first g) (second g))

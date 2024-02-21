@@ -11,16 +11,18 @@
       )))
 
 
-(define (list-chunk lst chunk-size)
-  (for/fold ([result '(())]
-             [size 0]
-             #:result (reverse (map reverse result)))
-            ([chpt (in-list lst)])
-    (cond
-      [(= size chunk-size) (values (cons `(,chpt) result)
-                                   1)]
-      [else (values (cons (cons chpt (car result)) (cdr result))
-                    (add1 size))])))
+(define (list-chunk lst n)
+  (if (null? lst)
+      '()
+      (cons (with-handlers
+                ([exn:fail:contract?
+                  (lambda (exn) lst)])
+              (take lst n))
+            (list-chunk (with-handlers
+                            ([exn:fail:contract?
+                              (lambda (exn) '())])
+                          (drop lst n))
+                        n))))
 
 
 (define (write-to-books books base-title base-path)
