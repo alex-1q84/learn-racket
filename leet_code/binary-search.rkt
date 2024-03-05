@@ -5,21 +5,17 @@
 
 (define/contract (search nums target)
   (-> (listof exact-integer?) exact-integer? exact-integer?)
-  (define vnums (list->vector nums))
+  (define array (list->vector nums))
+
   (define (b-search from to)
-    (define mid (middle from to))
-    (cond
-      [(= target (vector-ref vnums to))
-       to]
-      [(= target (vector-ref vnums mid))
-       mid]
-      [(= from mid)
-       -1]
-      [(> target (vector-ref vnums mid))
-       (b-search mid to)]
-      [(< target (vector-ref vnums mid))
-       (b-search from mid)]))
-  (b-search 0 (sub1 (vector-length vnums))))
+    (if (> from to) #f
+        (let ([mid (inexact->exact (quotient (+ to from) 2))])
+        (cond
+          [(= (vector-ref array mid) value) mid]
+          [(> (vector-ref array mid) value) (b-search from (sub1 mid))]
+          [(< (vector-ref array mid) value) (b-search (add1 mid) to)]))))
+
+  (b-search 0 (sub1 (vector-length array))))
 
 (define (middle a b)
   (floor (quotient (+ a b) 2)))
