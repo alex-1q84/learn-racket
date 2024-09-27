@@ -5,8 +5,8 @@
 (define (merge-sort lst cmp)
   (match lst
     [(list) '()]
-    [(list a) lst]
-    [(list lst-a lst-b ...) (merge (merge-sort `(,lst-a) cmp)
+    [(list _) lst]
+    [(list a lst-b ...) (merge (merge-sort `(,a) cmp)
                                    (merge-sort lst-b cmp)
                                    cmp)]))
 
@@ -26,6 +26,8 @@
 (merge-sort '(1 5 3) <=)
 (merge-sort '(1) <=)
 
-(merge-sort (for/list ([i (in-range 100)])
+(merge-sort '("abc" "abd" "abcd" "abdd") string<=?)
+
+(merge-sort (for/list ([_ (in-range 100)])
               (random 1 1000))
             >=)
