@@ -1,10 +1,11 @@
-; for pdf style
-#lang scribble/acmart
+#lang scribble/manual
+@; for pdf style
 
+@table-of-contents{}
 
 @title{On the Cookie-Eating Habits of Mice}
 
-@abstract{If you give a mouse a cookie, he's going to ask a glass of milk.}
+@;@abstract{If you give a mouse a cookie, he's going to ask a glass of milk.}
 
 @section{The consequences of Milk}
 That ``squeak'' was the mouse asking for milk. Let's

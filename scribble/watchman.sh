@@ -1,2 +1,2 @@
-watchman watch .
-watchman -- trigger . scrbl mouse.scrbl -- make html
+#!/bin/bash
+watchexec -e scrbl make html refresh_firefox

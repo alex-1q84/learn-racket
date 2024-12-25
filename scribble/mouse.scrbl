@@ -1,9 +1,13 @@
-; for pdf style
-;#lang scribble/acmart
 ; for manual style
 #lang scribble/manual
 
+@(define myblog (link "https://alex-1q84.github.io" "blog"))
+
+@table-of-contents{}
+
 @title{On the Cookie-Eating Habits of Mice}
+
+You can see the posts on my @|myblog|. @url{https://800best.com}
 
 If you give a mouse a cookie, he's going to ask a glass of milk.
 
@@ -49,8 +53,8 @@ this is an ordered item list
 所以我们可以在文本中嵌入可执行的代码，例如
 
 @verbatim|{
-   1 plus 1 is @(number->string (+ 1 1))
-   }| 渲染后结果
+1 plus 1 is @(number->string (+ 1 1))
+}| 渲染后结果
 
 1 plus 1 is @(number->string (+ 1 1))
 

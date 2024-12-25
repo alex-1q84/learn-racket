@@ -126,3 +126,4 @@ compiled
 .vscode
 .watchman*
 .aider*
+.env
