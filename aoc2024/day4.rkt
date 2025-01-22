@@ -48,10 +48,6 @@
   (and (<= 0 (first (last vec-poses)) (sub1 rowl))
        (<= 0 (second (last vec-poses)) (sub1 coll))))
 
-;;========================== part 1 ==========================
-
-(define TARGET-WORD (string->list "XMAS"))
-(define TARGET-WORD-LENGTH (length TARGET-WORD))
 
 (define word-matrix
   (list->vector
@@ -61,6 +57,11 @@
 (define matrix-row-len (matrix-row-length word-matrix))
 (define matrix-col-len (matrix-col-length word-matrix))
 
+;;========================== part 1 ==========================
+
+(define TARGET-WORD (string->list "XMAS"))
+(define TARGET-WORD-LENGTH (length TARGET-WORD))
+
 (for*/sum ([r (in-range matrix-row-len)]
            [c (in-range matrix-col-len)]
            #:when (equal? (matrix-ref word-matrix r c) #\X))
@@ -69,3 +70,19 @@
                        (filter (lambda (v)
                                  (valid-matrix-pos v matrix-row-len matrix-col-len))
                                (list-poses r c TARGET-WORD-LENGTH))))))
+
+;;========================== part 2 ===========================
+
+(define TARGET-WORD-SET (set #\M #\A #\S))
+
+; because we find the X when reach the X cross point, and the cross will never on border
+(for*/sum ([r (in-range 1 (sub1 matrix-row-len))]
+       [c (in-range 1 (sub1 matrix-col-len))]
+       #:when (equal? (matrix-ref word-matrix r c) #\A)) ; the X cross point is char A
+  (let ([x (map (curry matrix-pos-list-ref word-matrix)
+              `(((,(sub1 r) ,(sub1 c)) (,r ,c) (,(add1 r) ,(add1 c)))
+                ((,(sub1 r) ,(add1 c)) (,r ,c) (,(add1 r) ,(sub1 c)))))])
+    (if (and (set=? (list->set (first x)) TARGET-WORD-SET)
+             (set=? (list->set (second x)) TARGET-WORD-SET))
+        1
+        0)))
