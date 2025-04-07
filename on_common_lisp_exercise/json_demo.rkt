@@ -24,8 +24,10 @@ EOF
 
 (define (walk bookmark)
   (when bookmark
-      (println (hash-ref bookmark 'url))
-      (walk (hash-ref bookmark 'children))
-      ))
+    (println (hash-ref bookmark 'url))
+    (let ([children (hash-ref bookmark 'children)])
+      (when ((negate eq?) children 'null)
+        (for ([child (in-list children)])
+          (walk child))))))
 
 (walk jsexpr)
