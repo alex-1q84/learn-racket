@@ -20,14 +20,16 @@ EOF
 (define jsexpr
   (read-json (open-input-string bookmark-json-str)))
 
-(println jsexpr)
+;(println jsexpr)
 
-(define (walk bookmark)
+(define (walk bookmark handler)
   (when bookmark
-    (println (hash-ref bookmark 'url))
+    (handler bookmark)
     (let ([children (hash-ref bookmark 'children)])
       (when ((negate eq?) children 'null)
         (for ([child (in-list children)])
-          (walk child))))))
+          (walk child handler))))))
 
-(walk jsexpr)
+(walk jsexpr
+      (lambda (bookmark)
+        (println (hash-ref bookmark 'url))))
