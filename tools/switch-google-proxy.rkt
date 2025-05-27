@@ -142,7 +142,7 @@
 
 
 (define (main)
-  (define action-file "/usr/local/etc/privoxy/wall.action")
+  (define action-file "/opt/homebrew/etc/privoxy/wall.action")
   
   (define (ssh/switch-proxy action-file proxy-name enable?)
     (switch-proxy action-file "ssh" proxy-name enable?))
@@ -198,7 +198,7 @@
 (module+ test
   (require rackunit)
 
-  (define action-file "/usr/local/etc/privoxy/wall.action")
+  (define action-file "/opt/homebrew/etc/privoxy/wall.action")
   (define rule-groups (parse-to-rule-groups (file->lines action-file)))
 
   (check-equal? (url->rule "http://www.abc.com") ".abc.com")
