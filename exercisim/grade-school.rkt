@@ -4,29 +4,19 @@
 
 (define school%
   (class object%
-    (init-field (_roster '()))
+    ;; key - grade
+    ;; value - student list
+    (init-field (_roster (make-hash)))
 
     (super-new)
     
     (define/public (roster)
-      _roster)
+      (sort (hash->list _roster) by-grade #:key grade-key))
 
     (define/public (add name grade)
       (cond
         [(unexists? name)
-         (set! _roster
-               (let loop ([rost _roster])
-                 (cond
-                   [(empty? rost) (list (list grade name))]
-                   [(equal? grade (caar rost))
-                    (let ([_rost (car rost)])
-                      (cons (cons (car _rost)
-                                  (sort (cons name (cdr _rost))
-                                        by-name))
-                            (cdr rost)))]
-                   [else
-                    (sort (cons (car rost) (loop (cdr rost)))
-                          by-grade #:key grade-key)])))
+         (hash-set! _roster grade (sort (cons name (send this grade grade)) by-name))
          true]
         [else false]))
 
@@ -34,18 +24,15 @@
 
     (define by-grade <)
 
-    (define (grade-key item)
-      (car item))
+    (define grade-key car)
 
     (define/public (grade g)
-      (let ([g (assoc g _roster)])
-        (or (and g (cdr g))
-            '())))
+      (hash-ref _roster g '()))
 
     (define (unexists? name)
-      (or (empty? _roster)
-          (for/and ([g (in-list _roster)])
-            ((negate member) name g))))))
+      (or (hash-empty? _roster)
+          (for/and ([rst (in-list (hash-values _roster))])
+            ((negate member) name rst))))))
 
 
 (module+ test
