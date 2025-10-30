@@ -20,3 +20,6 @@ test:
 	raco test aoc2020/
 	raco test exercisim/
 	raco test leet_code/
+
+# Default target - run tests
+.DEFAULT_GOAL := test
